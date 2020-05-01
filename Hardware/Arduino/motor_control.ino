@@ -23,7 +23,7 @@ ros::NodeHandle  nh;
 std_msgs::String str_msg;
 ros::Publisher chatter("chatter", &str_msg);
 
-unsigned short data[12];
+unsigned short data[6];
 
 void messageCb( const std_msgs::UInt16MultiArray& control_msg){
   analogWrite(enableA_forward, control_msg.data[0]);
@@ -34,15 +34,15 @@ void messageCb( const std_msgs::UInt16MultiArray& control_msg){
   digitalWrite(insert3B_forward, control_msg.data[4]);
   digitalWrite(insert4B_forward, control_msg.data[5]);
 
-  analogWrite(enableA_backward, control_msg.data[6]);
-  digitalWrite(insert1A_backward, control_msg.data[7]);
-  digitalWrite(insert2A_backward, control_msg.data[8]);
+  analogWrite(enableA_backward, control_msg.data[0]);
+  digitalWrite(insert1A_backward, control_msg.data[1]);
+  digitalWrite(insert2A_backward, control_msg.data[2]);
   
-  analogWrite(enableB_backward, control_msg.data[9]);
-  digitalWrite(insert3B_backward, control_msg.data[10]);
-  digitalWrite(insert4B_backward, control_msg.data[11]);
+  analogWrite(enableB_backward, control_msg.data[3]);
+  digitalWrite(insert3B_backward, control_msg.data[4]);
+  digitalWrite(insert4B_backward, control_msg.data[5]);
 
-  for(int i = 0; i<12; i++)
+  for(int i = 0; i<6; i++)
     data[i] = control_msg.data[i];
 }
 
@@ -57,13 +57,29 @@ void status_analyze(unsigned short *data){
   
   //same speed(go or back straight)
   if(data[0] == data[3]) {
-    if(data[1] > data[2])
-      message[50] = "";
+    if(data[1] == 1 && data[2] == 1)
+     strcpy(message, "[Forward] [L: %d, 1, 0] [R: %d, 1, 0]", data[0], data[3]);
+    else if(data[1] == 1 && data[2] == 0)
+     strcpy(message, "[Rotation Right] [L: %d, 1, 0] [R: %d, 0, 1]", data[0], data[3]);
+    else if(data[1] == 0 && data[2] == 1)
+     strcpy(message, "[Rotation Left] [L: %d, 0, 1] [R: %d, 1, 0]", data[0], data[3]);
+    else if(data[1] == 0 && data[2] == 0)
+     strcpy(message, "[Rotation Left] [L: %d, 0, 1] [R: %d, 0, 1]", data[0], data[3]);
   }
   
   //turn left or right
-  else {
-    
+  else if(data[0] > data[3]) {
+    if(data[1] == 1 && data[2] == 1)
+     strcpy(message, "[Turn Right] [L: %d, 1, 0] [R: %d, 1, 0]", data[0], data[3]);
+    else if(data[1] == 0 && data[2] == 0)
+     strcpy(message, "[Right back] [L: %d, 0, 1] [R: %d, 0, 1]", data[0], data[3]);
+  }
+  
+  else if(data[0] < data[3]) {
+    if(data[1] == 1 && data[2] == 1)
+     strcpy(message, "[Turn Left] [L: %d, 1, 0] [R: %d, 1, 0]", data[0], data[3]);
+    else if(data[1] == 0 && data[2] == 0)
+     strcpy(message, "[Left back] [L: %d, 0, 1] [R: %d, 0, 1]", data[0], data[3]);
   }
 }
 
