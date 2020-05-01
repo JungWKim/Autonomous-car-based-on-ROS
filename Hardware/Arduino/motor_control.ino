@@ -2,6 +2,8 @@
 #include <std_msgs/String.h>
 #include <std_msgs/UInt16MultiArray.h>
 
+//  Assigning pin numbers
+//-----------------------------------------------
 #define enableA_forward   3
 #define insert1A_forward  2
 #define insert2A_forward  4
@@ -18,13 +20,20 @@
 #define insert3B_backward 12
 #define insert4B_backward 13
 
+
+//   Basic declaration to use rosserial
+//------------------------------------------------
 ros::NodeHandle  nh;
 
 std_msgs::String str_msg;
 ros::Publisher chatter("chatter", &str_msg);
 
+// array to store data from publisher
 unsigned short data[6];
 
+
+//   Motor control part
+//------------------------------------------------
 void messageCb( const std_msgs::UInt16MultiArray& control_msg){
   analogWrite(enableA_forward, control_msg.data[0]);
   digitalWrite(insert1A_forward, control_msg.data[1]);
@@ -50,9 +59,12 @@ void messageCb( const std_msgs::UInt16MultiArray& control_msg){
 ros::Subscriber<std_msgs::UInt16MultiArray> sub("motor_control", messageCb );
 
 
+//  message for publishing topic
 char message[50];
 
 
+//   check out the status of the vehicle
+//----------------------------------------------------
 void status_analyze(unsigned short *data){
   
   //same speed(go or back straight)
@@ -83,7 +95,9 @@ void status_analyze(unsigned short *data){
   }
 }
 
-
+//  1. Setup all pins as output
+//  2. Push and pull topics
+//----------------------------------------------
 void setup()
 {
   nh.initNode();
@@ -108,7 +122,8 @@ void setup()
 }
 
 
-
+//   Publish status information According to the status_analyze()
+//---------------------------------------------
 void loop()
 {  
   status_analyze(data);
