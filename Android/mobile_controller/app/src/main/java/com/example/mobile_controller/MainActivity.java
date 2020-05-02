@@ -36,21 +36,21 @@ public class MainActivity extends AppCompatActivity {
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
 
                 if(isChecked) {
-                    go.setActivated(false);
-                    back.setActivated(false);
-                    speedUp.setActivated(false);
-                    speedDown.setActivated(false);
-                    left.setActivated(false);
-                    right.setActivated(false);
+                    go.setEnabled(false);
+                    back.setEnabled(false);
+                    speedUp.setEnabled(false);
+                    speedDown.setEnabled(false);
+                    left.setEnabled(false);
+                    right.setEnabled(false);
                 }
 
                 else {
-                    go.setActivated(true);
-                    back.setActivated(true);
-                    speedUp.setActivated(true);
-                    speedDown.setActivated(true);
-                    left.setActivated(true);
-                    right.setActivated(true);
+                    go.setEnabled(true);
+                    back.setEnabled(true);
+                    speedUp.setEnabled(true);
+                    speedDown.setEnabled(true);
+                    left.setEnabled(true);
+                    right.setEnabled(true);
                 }
             }
         });
@@ -85,21 +85,21 @@ public class MainActivity extends AppCompatActivity {
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
 
                 if(isChecked) {
-                    go.setActivated(false);
-                    back.setActivated(false);
-                    speedUp.setActivated(false);
-                    speedDown.setActivated(false);
-                    left.setActivated(false);
-                    right.setActivated(false);
+                    go.setEnabled(false);
+                    back.setEnabled(false);
+                    speedUp.setEnabled(false);
+                    speedDown.setEnabled(false);
+                    left.setEnabled(false);
+                    right.setEnabled(false);
                 }
 
                 else {
-                    go.setActivated(true);
-                    back.setActivated(true);
-                    speedUp.setActivated(true);
-                    speedDown.setActivated(true);
-                    left.setActivated(true);
-                    right.setActivated(true);
+                    go.setEnabled(true);
+                    back.setEnabled(true);
+                    speedUp.setEnabled(true);
+                    speedDown.setEnabled(true);
+                    left.setEnabled(true);
+                    right.setEnabled(true);
                 }
             }
         });
