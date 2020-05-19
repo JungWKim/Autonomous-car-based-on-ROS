@@ -106,7 +106,7 @@
             android:gravity="center">
 
             //차량 전진 버튼
-            <Button
+            <ImageButton
                 android:id="@+id/go"
                 android:layout_width="70dp"
                 android:layout_height="70dp"
@@ -114,7 +114,7 @@
                 android:background="@drawable/up_button"/>
 
             //차량 후진 버튼
-            <Button
+            <ImageButton
                 android:id="@+id/back"
                 android:layout_width="70dp"
                 android:layout_height="70dp"
@@ -170,7 +170,7 @@
                     android:orientation="horizontal">
 
                     //속도 증가 버튼
-                    <Button
+                    <ImageButton
                         android:id="@+id/speedUp"
                         android:layout_width="50dp"
                         android:layout_height="50dp"
@@ -183,11 +183,11 @@
                         android:layout_height="wrap_content"
                         android:layout_marginLeft="10dp"
                         android:layout_marginRight="10dp"
-                        android:text="255"
+                        android:text="120"
                         android:textSize="30dp" />
 
                     //속도 감소 버튼
-                    <Button
+                    <ImageButton
                         android:id="@+id/speedDown"
                         android:layout_width="50dp"
                         android:layout_height="50dp"
@@ -208,7 +208,7 @@
             android:gravity="center">
 
             //좌회전 버튼
-            <Button
+            <ImageButton
                 android:id="@+id/left"
                 android:layout_width="70dp"
                 android:layout_height="70dp"
@@ -216,7 +216,7 @@
                 android:background="@drawable/left_button"/>
 
             //우회전 버튼
-            <Button
+            <ImageButton
                 android:id="@+id/right"
                 android:layout_width="70dp"
                 android:layout_height="70dp"
