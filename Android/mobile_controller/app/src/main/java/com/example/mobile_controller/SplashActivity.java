@@ -10,11 +10,12 @@ public class SplashActivity extends Activity {
         super.onCreate(savedInstanceState);
 
         try {
-            Thread.sleep(4000); //대기 초 설정
-        } catch (Exception e) {
+            Thread.sleep(3000); //대기 초 설정
+        } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        startActivity(new Intent(this, SplashActivity.class));
+        //스플래쉬 액티비티가 종료된 후 메인액티비티를 보여주는 부분
+        startActivity(new Intent(this, MainActivity.class));
         finish();
     }
 }

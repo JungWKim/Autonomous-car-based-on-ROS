@@ -5,10 +5,16 @@ import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.content.Intent;//음성인식 관련 패키지
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;//오디오녹음 권한 허용창 생성에 필요
 import android.support.v4.content.ContextCompat;//오디오녹음 권한 허용창 생성에 필요
 import android.support.v7.app.AppCompatActivity;
+import android.speech.RecognizerIntent;//음성인식 관련 패키지
+import android.speech.RecognitionListener;//음성인식 관련 패키지
+import android.speech.SpeechRecognizer;//음성인식 관련 패키지
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.CompoundButton;
@@ -16,6 +22,9 @@ import android.widget.ImageButton;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import java.util.ArrayList;
+import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -46,6 +55,7 @@ public class MainActivity extends AppCompatActivity {
         final Switch autoDriveMode = findViewById(R.id.autoDriveMode);
         final Switch voiceControl = findViewById(R.id.voiceControl);
 
+        //SharedPreference에서 속도 값을 가져와서 속도계에 출력
         SharedPreferences sp = getSharedPreferences("SPEED", MODE_PRIVATE);
         speed = sp.getInt("speed", 120);
         speedView.setText(speed.toString());
@@ -128,7 +138,13 @@ public class MainActivity extends AppCompatActivity {
                         speedUp.setBackgroundResource(R.drawable.speed_up_pushed); break;
 
                     case MotionEvent.ACTION_UP:
-                        speedUp.setBackgroundResource(R.drawable.speed_up_button); break;
+                        speedUp.setBackgroundResource(R.drawable.speed_up_button);
+                        tmp = speedView.getText().toString();
+                        speed = Integer.parseInt(tmp);
+                        if(speed >= 255) speed = 255;
+                        else             speed += 5;
+                        speedView.setText(speed.toString());
+                        break;
                 }
 
                 return false;
@@ -145,7 +161,13 @@ public class MainActivity extends AppCompatActivity {
                         speedDown.setBackgroundResource(R.drawable.speed_down_pushed); break;
 
                     case MotionEvent.ACTION_UP:
-                        speedDown.setBackgroundResource(R.drawable.speed_down_button); break;
+                        speedDown.setBackgroundResource(R.drawable.speed_down_button);
+                        tmp = speedView.getText().toString();
+                        speed = Integer.parseInt(tmp);
+                        if(speed <= 0) speed = 0;
+                        else           speed -= 5;
+                        speedView.setText(speed.toString());
+                        break;
                 }
 
                 return false;
@@ -173,7 +195,7 @@ public class MainActivity extends AppCompatActivity {
                     left.setBackgroundResource(R.drawable.left_locked);
                     right.setBackgroundResource(R.drawable.right_locked);
 
-                    Toast.makeText(MainActivity.this, "음성인식을 시작합니다.", Toast.LENGTH_LONG).show();
+                    Toast.makeText(MainActivity.this, "음성인식을 시작합니다.", Toast.LENGTH_SHORT).show();
 
                     //음성인식 스위치 켜질 경우 -> 사용자가 한 말을 보여주는 커스텀다이얼로그 생성
                     dialogView = getLayoutInflater().inflate(R.layout.voice_dialog, null);//레이아웃을 담는 View객체 생성
@@ -190,6 +212,8 @@ public class MainActivity extends AppCompatActivity {
                     });
                     AlertDialog alertDialog = builder.create();//AlertDialog객체 생성
                     alertDialog.show();
+
+                    inputVoice(voice_text);
                 }
 
                 //음성인식 스위치가 꺼졌을 때 -> 나머지 버튼 비활성화 및 이미지 변경
@@ -208,32 +232,8 @@ public class MainActivity extends AppCompatActivity {
                     left.setBackgroundResource(R.drawable.left_button);
                     right.setBackgroundResource(R.drawable.right_button);
 
-                    Toast.makeText(MainActivity.this, "음성인식을 종료합니다.", Toast.LENGTH_LONG).show();
+                    Toast.makeText(MainActivity.this, "음성인식을 종료합니다.", Toast.LENGTH_SHORT).show();
                 }
-            }
-        });
-
-        //속도 증가 버튼 리스너 -> 속도 5씩 높이고 텍스트뷰 표시
-        speedUp.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                tmp = speedView.getText().toString();
-                speed = Integer.parseInt(tmp);
-                if(speed >= 255) speed = 255;
-                else speed += 5;
-                speedView.setText(speed.toString());
-            }
-        });
-
-        //속도 감소 버튼 리스너 -> 속도 5씩 줄이고 텍스트뷰 표시
-        speedDown.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                tmp = speedView.getText().toString();
-                speed = Integer.parseInt(tmp);
-                if(speed <= 0) speed = 0;
-                else speed -= 5;
-                speedView.setText(speed.toString());
             }
         });
 
@@ -296,5 +296,138 @@ public class MainActivity extends AppCompatActivity {
         editor.putInt("speed", Integer.parseInt(tmp));
 
         editor.commit();
+    }
+
+    //음성인식 처리부
+    public void inputVoice(final TextView voice_text) {
+        try {
+            Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+            intent.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, this.getPackageName());
+            intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, "ko-KR");
+            final SpeechRecognizer stt = SpeechRecognizer.createSpeechRecognizer(this);
+            stt.setRecognitionListener(new RecognitionListener() {
+                @Override
+                public void onReadyForSpeech(Bundle params) {
+                    Toast.makeText(MainActivity.this, "명령해주십시오", Toast.LENGTH_SHORT).show();
+                }
+
+                @Override
+                public void onBeginningOfSpeech() {
+
+                }
+
+                @Override
+                public void onRmsChanged(float rmsdB) {
+
+                }
+
+                @Override
+                public void onBufferReceived(byte[] buffer) {
+
+                }
+
+                @Override
+                public void onEndOfSpeech() {
+                    Toast.makeText(MainActivity.this, "명령 인식 완료", Toast.LENGTH_SHORT).show();
+                }
+
+                @Override
+                public void onError(int error) {
+                    Toast.makeText(MainActivity.this, "오류 발생 : " + error, Toast.LENGTH_SHORT).show();
+                }
+
+                @Override
+                public void onResults(Bundle results) {
+                    ArrayList<String> result = (ArrayList<String>) results.get(SpeechRecognizer.RESULTS_RECOGNITION);
+                    voice_text.setText("");
+                    voice_text.append("[명령] " + result.get(0) + "\n");
+                    replyAnswer(result.get(0), voice_text);
+                    stt.destroy();
+                }
+
+                @Override
+                public void onPartialResults(Bundle partialResults) {
+
+                }
+
+                @Override
+                public void onEvent(int eventType, Bundle params) {
+
+                }
+            });
+        } catch(Exception e) {
+            Toast.makeText(MainActivity.this, e.toString(), Toast.LENGTH_LONG).show();
+        }
+    }
+
+    //인식된 음성에 따른 출력 결과 처리부
+    public void replyAnswer(String input, TextView voice_text) {
+        try {
+            if(input.equals("앞으로 가")) {
+                voice_text.append(">> 차량을 앞으로 움직입니다.");
+            }
+
+            else if(input.equals("뒤로 가")) {
+                voice_text.append(">> 차량을 뒤로 움직입니다.");
+            }
+
+            else if(input.contains("왼쪽 차선") && input.contains("이동")) {
+                voice_text.append(">> 왼쪽 차선으로 이동합니다.");
+            }
+
+            else if(input.contains("오른쪽 차선") && input.contains("이동")) {
+                voice_text.append(">> 오른쪽 차선으로 이동합니다.");
+            }
+
+            else if(input.contains("왼쪽") && input.contains("전진")) {
+                voice_text.append(">> 왼쪽으로 전진합니다.");
+            }
+
+            else if(input.contains("오른쪽") && input.contains("전진")) {
+                voice_text.append(">> 오른쪽 으로 전진합니다.");
+            }
+
+            else if(input.contains("왼쪽") && input.contains("후진")) {
+                voice_text.append(">> 왼쪽으로 후진합니다.");
+            }
+
+            else if(input.contains("오른쪽") && input.contains("후진")) {
+                voice_text.append(">> 오른쪽으로 후진합니다.");
+            }
+
+            else if(input.equals("속도 올려") || input.equals("속도 높여")) {
+                voice_text.append(">> 차량의 속도를 높입니다.");
+
+                final TextView speedView = findViewById(R.id.speedView);
+                if(speed >= 255) speed = 255;
+                else             speed += 5;
+                speedView.setText(speed.toString());
+            }
+
+            else if(input.equals("속도 내려") || input.equals("속도 낮춰")) {
+                voice_text.append(">> 차량의 속도를 내립니다.");
+
+                final TextView speedView = findViewById(R.id.speedView);
+                if(speed <= 0) speed = 0;
+                else             speed -= 5;
+                speedView.setText(speed.toString());
+            }
+
+            else if(input.equals("정지")) {
+                voice_text.append(">> 차량을 정지합니다.");
+            }
+
+            else if(input.equals("종료")) {
+                voice_text.append(">> 음성인식 기능이 종료단계에 들어갑니다....");
+                finish();
+            }
+
+            else {
+                voice_text.append("** 알 수 없는 명령입니다. **");
+            }
+
+        } catch(Exception e) {
+            Toast.makeText(MainActivity.this, e.toString(), Toast.LENGTH_SHORT).show();
+        }
     }
 }
