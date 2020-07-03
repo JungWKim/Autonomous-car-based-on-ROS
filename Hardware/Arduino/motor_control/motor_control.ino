@@ -4,21 +4,21 @@
 
 //  Assigning pin numbers
 //-----------------------------------------------
-#define enableA_forward   3
+#define enableA_forward   50
 #define insert1A_forward  2
-#define insert2A_forward  4
+#define insert2A_forward  51
 
-#define enableB_forward   5
-#define insert3B_forward  7
-#define insert4B_forward  8
+#define enableB_forward   8
+#define insert3B_forward  22
+#define insert4B_forward  24
 
 #define enableA_backward  6
 #define insert1A_backward 10
 #define insert2A_backward 11
 
-#define enableB_backward  9
-#define insert3B_backward 12
-#define insert4B_backward 13
+#define enableB_backward  3
+#define insert3B_backward 4
+#define insert4B_backward 5
 
 
 //   Basic declaration to use rosserial
@@ -66,7 +66,7 @@ char message[50];
 //   check out the status of the vehicle
 //----------------------------------------------------
 void status_analyze(unsigned short *data){
-  
+#if 0
   //same speed(go or back straight)
   if(data[0] == data[3]) {
     if(data[1] == 1 && data[2] == 1)
@@ -93,6 +93,7 @@ void status_analyze(unsigned short *data){
     else if(data[1] == 0 && data[2] == 0)
      strcpy(message, "[Left back] [L: %d, 0, 1] [R: %d, 0, 1]", data[0], data[3]);
   }
+#endif
 }
 
 //  1. Setup all pins as output
@@ -104,19 +105,15 @@ void setup()
   nh.advertise(chatter);
   nh.subscribe(sub);
 
-  pinMode(enableA_forward, OUTPUT);
   pinMode(insert1A_forward, OUTPUT);
   pinMode(insert2A_forward, OUTPUT);
 
-  pinMode(enableB_forward, OUTPUT);
   pinMode(insert3B_forward, OUTPUT);
   pinMode(insert4B_forward, OUTPUT);
-
-  pinMode(enableA_backward, OUTPUT);
+  
   pinMode(insert1A_backward, OUTPUT);
   pinMode(insert2A_backward, OUTPUT);
 
-  pinMode(enableB_backward, OUTPUT);
   pinMode(insert3B_backward, OUTPUT);
   pinMode(insert4B_backward, OUTPUT);
 }
