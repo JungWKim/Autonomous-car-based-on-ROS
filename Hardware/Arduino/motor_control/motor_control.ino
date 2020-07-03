@@ -2,23 +2,37 @@
 #include <std_msgs/String.h>
 #include <std_msgs/UInt16MultiArray.h>
 
+
+/*----------------
+ * How to control motor
+ * 
+ * 1. 1A(HIGH) && 2A(LOW) >> reverse clock direction
+ * 2. 1A(LOW) && 2A(HIGH) >> clock direction
+ * 3. 3B(HIGH) && 4B(LOW) >> reverse clock direction
+ * 4. 3B(LOW) && 4B(HIGH) >> clock direction
+ * 
+ */
+ 
+
 //  Assigning pin numbers
 //-----------------------------------------------
-#define enableA_forward   50
-#define insert1A_forward  2
-#define insert2A_forward  51
+#define EA_R   0
+#define A1_R  53
+#define A2_R  51
 
-#define enableB_forward   8
-#define insert3B_forward  22
-#define insert4B_forward  24
+#define EB_R  10
+#define B3_R  43
+#define B4_R  41
 
-#define enableA_backward  6
-#define insert1A_backward 10
-#define insert2A_backward 11
+#define EA_L   8
+#define A1_L  22
+#define A2_L  24
 
-#define enableB_backward  3
-#define insert3B_backward 4
-#define insert4B_backward 5
+#define EB_L   3
+#define B3_L   4
+#define B4_L   5
+
+#define SPEED 40
 
 
 //   Basic declaration to use rosserial
@@ -35,22 +49,40 @@ unsigned short data[6];
 //   Motor control part
 //------------------------------------------------
 void messageCb( const std_msgs::UInt16MultiArray& control_msg){
-  analogWrite(enableA_forward, control_msg.data[0]);
-  digitalWrite(insert1A_forward, control_msg.data[1]);
-  digitalWrite(insert2A_forward, control_msg.data[2]);
-  
-  analogWrite(enableB_forward, control_msg.data[3]);
-  digitalWrite(insert3B_forward, control_msg.data[4]);
-  digitalWrite(insert4B_forward, control_msg.data[5]);
 
-  analogWrite(enableA_backward, control_msg.data[0]);
-  digitalWrite(insert1A_backward, control_msg.data[1]);
-  digitalWrite(insert2A_backward, control_msg.data[2]);
-  
-  analogWrite(enableB_backward, control_msg.data[3]);
-  digitalWrite(insert3B_backward, control_msg.data[4]);
-  digitalWrite(insert4B_backward, control_msg.data[5]);
+  analogWrite(EA_L, SPEED);
+  analogWrite(EA_R, SPEED);
+  analogWrite(EB_R, SPEED);
+  analogWrite(EB_L, SPEED);
 
+#if 1
+
+  digitalWrite(A1_L, control_msg.data[1]);
+  digitalWrite(A2_L, control_msg.data[2]);
+  
+#endif
+  
+#if 1
+
+  digitalWrite(B3_L, control_msg.data[1]);
+  digitalWrite(B4_L, control_msg.data[2]);
+  
+#endif
+
+#if 1
+
+  digitalWrite(A1_R, control_msg.data[4]);
+  digitalWrite(A2_R, control_msg.data[5]);
+
+#endif
+
+#if 1
+
+  digitalWrite(B3_R, control_msg.data[4]);
+  digitalWrite(B4_R, control_msg.data[5]);
+  
+#endif
+  
   for(int i = 0; i<6; i++)
     data[i] = control_msg.data[i];
 }
@@ -105,17 +137,17 @@ void setup()
   nh.advertise(chatter);
   nh.subscribe(sub);
 
-  pinMode(insert1A_forward, OUTPUT);
-  pinMode(insert2A_forward, OUTPUT);
+  pinMode(A1_L, OUTPUT);
+  pinMode(A2_L, OUTPUT);
 
-  pinMode(insert3B_forward, OUTPUT);
-  pinMode(insert4B_forward, OUTPUT);
+  pinMode(B3_L, OUTPUT);
+  pinMode(B4_L, OUTPUT);
   
-  pinMode(insert1A_backward, OUTPUT);
-  pinMode(insert2A_backward, OUTPUT);
+  pinMode(A1_R, OUTPUT);
+  pinMode(A2_R, OUTPUT);
 
-  pinMode(insert3B_backward, OUTPUT);
-  pinMode(insert4B_backward, OUTPUT);
+  pinMode(B3_R, OUTPUT);
+  pinMode(B4_R, OUTPUT);
 }
 
 
