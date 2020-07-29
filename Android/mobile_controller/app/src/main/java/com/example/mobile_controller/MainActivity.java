@@ -1,5 +1,9 @@
 package com.example.mobile_controller;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.*;//소켓 프로그래밍 관련 패키지
 import android.Manifest;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
@@ -32,6 +36,11 @@ public class MainActivity extends AppCompatActivity {
     String tmp;
     Integer speed;
 
+    Socket socket = null;//소켓 변수
+    InputStream inputStream = null;//입력스트림 변수
+    OutputStream outputStream  = null;//출력스트림 변수
+    byte[] bufSnd = new byte[1];
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -60,6 +69,23 @@ public class MainActivity extends AppCompatActivity {
         speed = sp.getInt("speed", 120);
         speedView.setText(speed.toString());
 
+        try {
+            socket = new Socket();
+            SocketAddress addr = new InetSocketAddress("192.168.219.104", 9000);
+            socket.connect(addr);
+            outputStream = socket.getOutputStream();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            Toast.makeText(MainActivity.this, e.toString(), Toast.LENGTH_SHORT).show();
+        } catch (SecurityException se) {
+            // security manager에서 허용되지 않은 기능 수행.
+            Toast.makeText(MainActivity.this, se.toString(), Toast.LENGTH_SHORT).show();
+        } catch (IllegalArgumentException ae) {
+            // 소켓 생성 시 전달되는 포트 번호(65536)이 허용 범위(0~65535)를 벗어남.
+            Toast.makeText(MainActivity.this, ae.toString(), Toast.LENGTH_SHORT).show();
+        }
+
         //전진 버튼 리스너 -> 이미지변경
         go.setOnTouchListener(new View.OnTouchListener() {
             @Override
@@ -67,10 +93,19 @@ public class MainActivity extends AppCompatActivity {
                 switch(event.getAction())
                 {
                     case MotionEvent.ACTION_DOWN:
-                        go.setBackgroundResource(R.drawable.up_pushed); break;
+                        go.setBackgroundResource(R.drawable.up_pushed);
+
+                        bufSnd[0] = 0x00;
+                        try {
+                            outputStream.write(bufSnd, 0, 1);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                        break;
 
                     case MotionEvent.ACTION_UP:
-                        go.setBackgroundResource(R.drawable.up_button); break;
+                        go.setBackgroundResource(R.drawable.up_button);
+                        break;
                 }
 
                 return false;
@@ -84,7 +119,9 @@ public class MainActivity extends AppCompatActivity {
                 switch(event.getAction())
                 {
                     case MotionEvent.ACTION_DOWN:
-                        back.setBackgroundResource(R.drawable.down_pushed); break;
+                        back.setBackgroundResource(R.drawable.down_pushed);
+
+                        break;
 
                     case MotionEvent.ACTION_UP:
                         back.setBackgroundResource(R.drawable.down_button); break;
@@ -429,5 +466,24 @@ public class MainActivity extends AppCompatActivity {
         } catch(Exception e) {
             Toast.makeText(MainActivity.this, e.toString(), Toast.LENGTH_SHORT).show();
         }
+    }
+
+    protected void onDestroy() {
+        super.onDestroy();
+        /*
+        try {
+            if(outputStream != null)
+                socket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+            Toast.makeText(MainActivity.this, e.toString(), Toast.LENGTH_SHORT).show();
+        } catch (SecurityException se) {
+          // security manager에서 허용되지 않은 기능 수행.
+            Toast.makeText(MainActivity.this, se.toString(), Toast.LENGTH_SHORT).show();
+        } catch (IllegalArgumentException ae) {
+            // 소켓 생성 시 전달되는 포트 번호(65536)이 허용 범위(0~65535)를 벗어남.
+            Toast.makeText(MainActivity.this, ae.toString(), Toast.LENGTH_SHORT).show();
+        }
+        */
     }
 }
