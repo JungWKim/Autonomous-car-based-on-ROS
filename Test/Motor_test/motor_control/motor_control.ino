@@ -1,6 +1,6 @@
 #include <ros.h>
 #include <std_msgs/String.h>
-#include <std_msgs/Empty.h>
+#include <std_msgs/Int32.h>
 
 /*----------------
  * How to control motor
@@ -38,14 +38,36 @@
 //   Basic declaration to use rosserial
 //------------------------------------------------
 ros::NodeHandle  nh;
+std_msgs::String str_msg;
+
+
+
+
+
+
+void messageCb(const std_msgs::Int32& msg) {
+  Serial.write(msg.data);
+}
+ros::Subscriber<std_msgs::Int32> sub("toArduino", messageCb);
+
+
+
+
+
+
+ros::Publisher chatter("chatter", &str_msg);
+char message[30] = "data from arduino";
+
+
 //  1. Setup all pins as output
 //  2. Push and pull topics
 //----------------------------------------------
 void setup()
 {
-
-
+  Serial.begin(9600);
   nh.initNode();
+  nh.advertise(chatter);
+  nh.subscribe(sub);
 
   analogWrite(EA_L, 40);
   analogWrite(EA_R, 40);
@@ -70,34 +92,47 @@ void setup()
 //---------------------------------------------
 void loop()
 {    
-#if 1
+#if 0
 
   digitalWrite(A1_L, HIGH);
   digitalWrite(A2_L, LOW);
   
-#endif
-  
-#if 1
-
   digitalWrite(B3_L, HIGH);
   digitalWrite(B4_L, LOW);
-  
-#endif
-
-#if 1
 
   digitalWrite(A1_R, LOW);
   digitalWrite(A2_R, HIGH);
 
-#endif
-
-#if 1
-
   digitalWrite(B3_R, LOW);
   digitalWrite(B4_R, HIGH);
-  
+
 #endif
   
+/*******************************/
+
+#if 0
+
+  delay(3000);
+
+  digitalWrite(A1_L, LOW);
+  digitalWrite(A2_L, HIGH);
+  
+  digitalWrite(B3_L, LOW);
+  digitalWrite(B4_L, HIGH);
+
+  digitalWrite(A1_R, HIGH);
+  digitalWrite(A2_R, LOW);
+
+  digitalWrite(B3_R, HIGH);
+  digitalWrite(B4_R, LOW);
+
+  delay(3000);
+  
+#endif
+
+  str_msg.data = message;
+  chatter.publish(&str_msg);
+  
   nh.spinOnce();
-  delay(100);
+  delay(1000);
 }
