@@ -1,7 +1,6 @@
 #include <ros.h>
 #include <std_msgs/String.h>
-#include <std_msgs/UInt16MultiArray.h>
-
+#include <std_msgs/Int32.h>
 
 /*----------------
  * How to control motor
@@ -12,11 +11,11 @@
  * 4. 3B(LOW) && 4B(HIGH) >> clock direction
  * 
  */
- 
 
 //  Assigning pin numbers
 //-----------------------------------------------
-#define EA_R   0
+
+#define EA_R   2
 #define A1_R  53
 #define A2_R  51
 
@@ -32,134 +31,142 @@
 #define B3_L   4
 #define B4_L   5
 
-#define SPEED 40
-
 
 //   Basic declaration to use rosserial
 //------------------------------------------------
 ros::NodeHandle  nh;
-
 std_msgs::String str_msg;
-ros::Publisher chatter("chatter", &str_msg);
-
-// array to store data from publisher
-unsigned short data[6];
 
 
-//   Motor control part
+void Forward()
+{
+  analogWrite(EA_L, 40);
+  analogWrite(EA_R, 40);
+  analogWrite(EB_R, 40);
+  analogWrite(EB_L, 40);
+  
+  digitalWrite(A1_L, HIGH);
+  digitalWrite(A2_L, LOW);
+  
+  digitalWrite(B3_L, HIGH);
+  digitalWrite(B4_L, LOW);
+
+  digitalWrite(A1_R, LOW);
+  digitalWrite(A2_R, HIGH);
+
+  digitalWrite(B3_R, LOW);
+  digitalWrite(B4_R, HIGH);
+}
+
+void Backward()
+{
+  analogWrite(EA_L, 40);
+  analogWrite(EA_R, 40);
+  analogWrite(EB_R, 40);
+  analogWrite(EB_L, 40);
+  
+  digitalWrite(A1_L, LOW);
+  digitalWrite(A2_L, HIGH);
+  
+  digitalWrite(B3_L, LOW);
+  digitalWrite(B4_L, HIGH);
+
+  digitalWrite(A1_R, HIGH);
+  digitalWrite(A2_R, LOW);
+
+  digitalWrite(B3_R, HIGH);
+  digitalWrite(B4_R, LOW);
+}
+
+void Left()
+{
+  analogWrite(EA_L, 40);
+  analogWrite(EA_R, 60);
+  analogWrite(EB_R, 60);
+  analogWrite(EB_L, 40);
+  
+  Forward();
+}
+
+void Right()
+{
+  analogWrite(EA_L, 60);
+  analogWrite(EA_R, 40);
+  analogWrite(EB_R, 40);
+  analogWrite(EB_L, 60);
+  
+  Forward();
+}
+
+void Stop()
+{
+  analogWrite(EA_L, 0);
+  analogWrite(EA_R, 0);
+  analogWrite(EB_R, 0);
+  analogWrite(EB_L, 0);
+}
+
+//   Subscriber function
 //------------------------------------------------
-void messageCb( const std_msgs::UInt16MultiArray& control_msg){
-
-  analogWrite(EA_L, SPEED);
-  analogWrite(EA_R, SPEED);
-  analogWrite(EB_R, SPEED);
-  analogWrite(EB_L, SPEED);
-
-#if 1
-
-  digitalWrite(A1_L, control_msg.data[1]);
-  digitalWrite(A2_L, control_msg.data[2]);
-  
-#endif
+void messageCb(const std_msgs::Int32& msg) {
   
 #if 1
-
-  digitalWrite(B3_L, control_msg.data[1]);
-  digitalWrite(B4_L, control_msg.data[2]);
-  
+  switch(msg.data){
+    case 1: Forward();  break;
+    case 2: Backward(); break;
+    case 3: Left();     break;
+    case 4: Right();    break;
+    case 5: Stop();     break;
+  }
 #endif
 
-#if 1
-
-  digitalWrite(A1_R, control_msg.data[4]);
-  digitalWrite(A2_R, control_msg.data[5]);
-
-#endif
-
-#if 1
-
-  digitalWrite(B3_R, control_msg.data[4]);
-  digitalWrite(B4_R, control_msg.data[5]);
-  
-#endif
-  
-  for(int i = 0; i<6; i++)
-    data[i] = control_msg.data[i];
 }
+ros::Subscriber<std_msgs::Int32> sub("toArduino", messageCb);
 
 
-ros::Subscriber<std_msgs::UInt16MultiArray> sub("motor_control", messageCb );
+//     Publisher registration part
+//----------------------------------------------
+ros::Publisher chatter("chatter", &str_msg);
+//message for publishing
+char message[30] = "data from arduino";
 
-
-//  message for publishing topic
-char message[50];
-
-
-//   check out the status of the vehicle
-//----------------------------------------------------
-void status_analyze(unsigned short *data){
-#if 0
-  //same speed(go or back straight)
-  if(data[0] == data[3]) {
-    if(data[1] == 1 && data[2] == 1)
-     strcpy(message, "[Forward] [L: %d, 1, 0] [R: %d, 1, 0]", data[0], data[3]);
-    else if(data[1] == 1 && data[2] == 0)
-     strcpy(message, "[Rotation Right] [L: %d, 1, 0] [R: %d, 0, 1]", data[0], data[3]);
-    else if(data[1] == 0 && data[2] == 1)
-     strcpy(message, "[Rotation Left] [L: %d, 0, 1] [R: %d, 1, 0]", data[0], data[3]);
-    else if(data[1] == 0 && data[2] == 0)
-     strcpy(message, "[Rotation Left] [L: %d, 0, 1] [R: %d, 0, 1]", data[0], data[3]);
-  }
-  
-  //turn left or right
-  else if(data[0] > data[3]) {
-    if(data[1] == 1 && data[2] == 1)
-     strcpy(message, "[Turn Right] [L: %d, 1, 0] [R: %d, 1, 0]", data[0], data[3]);
-    else if(data[1] == 0 && data[2] == 0)
-     strcpy(message, "[Right back] [L: %d, 0, 1] [R: %d, 0, 1]", data[0], data[3]);
-  }
-  
-  else if(data[0] < data[3]) {
-    if(data[1] == 1 && data[2] == 1)
-     strcpy(message, "[Turn Left] [L: %d, 1, 0] [R: %d, 1, 0]", data[0], data[3]);
-    else if(data[1] == 0 && data[2] == 0)
-     strcpy(message, "[Left back] [L: %d, 0, 1] [R: %d, 0, 1]", data[0], data[3]);
-  }
-#endif
-}
 
 //  1. Setup all pins as output
 //  2. Push and pull topics
 //----------------------------------------------
 void setup()
 {
+  Serial.begin(57600);
   nh.initNode();
   nh.advertise(chatter);
   nh.subscribe(sub);
 
+  analogWrite(EA_L, 40);
+  analogWrite(EA_R, 40);
+  analogWrite(EB_R, 40);
+  analogWrite(EB_L, 40);
+  
+  pinMode(B4_R, OUTPUT);
+  pinMode(B3_R, OUTPUT);
+
   pinMode(A1_L, OUTPUT);
   pinMode(A2_L, OUTPUT);
+  
+  pinMode(A2_R, OUTPUT);
+  pinMode(A1_R, OUTPUT);
 
   pinMode(B3_L, OUTPUT);
   pinMode(B4_L, OUTPUT);
-  
-  pinMode(A1_R, OUTPUT);
-  pinMode(A2_R, OUTPUT);
-
-  pinMode(B3_R, OUTPUT);
-  pinMode(B4_R, OUTPUT);
 }
 
 
 //   Publish status information According to the status_analyze()
 //---------------------------------------------
 void loop()
-{  
-  status_analyze(data);
-  
+{    
   str_msg.data = message;
-  chatter.publish( &str_msg );
+  chatter.publish(&str_msg);
   
   nh.spinOnce();
-  delay(10);
+  delay(1000);
 }
