@@ -1,5 +1,4 @@
 #include <ros.h>
-#include <std_msgs/String.h>
 #include <std_msgs/Int32.h>
 
 /*----------------
@@ -35,7 +34,10 @@
 //   Basic declaration to use rosserial
 //------------------------------------------------
 ros::NodeHandle  nh;
-std_msgs::String str_msg;
+
+int buf;
+
+
 
 
 void Forward()
@@ -78,24 +80,44 @@ void Backward()
   digitalWrite(B4_R, LOW);
 }
 
-void Left()
+void LeftForward()
 {
+  Forward();
+    
   analogWrite(EA_L, 40);
   analogWrite(EA_R, 60);
   analogWrite(EB_R, 60);
   analogWrite(EB_L, 40);
-  
-  Forward();
 }
 
-void Right()
+void RightForward()
 {
+  Forward();
+    
   analogWrite(EA_L, 60);
   analogWrite(EA_R, 40);
   analogWrite(EB_R, 40);
   analogWrite(EB_L, 60);
-  
-  Forward();
+}
+
+void LeftBackward()
+{
+  Backward();
+    
+  analogWrite(EA_L, 40);
+  analogWrite(EA_R, 60);
+  analogWrite(EB_R, 60);
+  analogWrite(EB_L, 40);
+}
+
+void RightBackward()
+{
+  Backward();
+    
+  analogWrite(EA_L, 60);
+  analogWrite(EA_R, 40);
+  analogWrite(EB_R, 40);
+  analogWrite(EB_L, 60);
 }
 
 void Stop()
@@ -106,29 +128,31 @@ void Stop()
   analogWrite(EB_L, 0);
 }
 
+
 //   Subscriber function
 //------------------------------------------------
 void messageCb(const std_msgs::Int32& msg) {
-  
-#if 1
-  switch(msg.data){
-    case 1: Forward();  break;
-    case 2: Backward(); break;
-    case 3: Left();     break;
-    case 4: Right();    break;
-    case 5: Stop();     break;
-  }
-#endif
 
+  switch(msg.data){
+    case 1: Forward();       buf = msg.data; break;
+    case 2: Backward();      buf = msg.data; break;
+    case 3: LeftForward();   buf = msg.data; break;
+    case 4: RightForward();  buf = msg.data; break;
+    case 5: LeftBackward();  buf = msg.data; break;
+    case 6: RightBackward(); buf = msg.data; break;
+    case 7: Stop();          buf = msg.data; break;
+  }
+  
 }
 ros::Subscriber<std_msgs::Int32> sub("toArduino", messageCb);
 
 
+std_msgs::Int32 int_msg;
+
 //     Publisher registration part
 //----------------------------------------------
-ros::Publisher chatter("chatter", &str_msg);
-//message for publishing
-char message[30] = "data from arduino";
+ros::Publisher chatter("chatter", &int_msg);
+
 
 
 //  1. Setup all pins as output
@@ -164,9 +188,8 @@ void setup()
 //---------------------------------------------
 void loop()
 {    
-  str_msg.data = message;
-  chatter.publish(&str_msg);
-  
+  int_msg.data = buf;
+  chatter.publish(&int_msg);
   nh.spinOnce();
-  delay(1000);
+  delay(500);
 }
