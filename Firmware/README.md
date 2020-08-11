@@ -11,17 +11,20 @@ While compiling, there could happend several errors but unfortunately, "Do-It-Yo
 3. rqt_graph
 ![raspberry_arduino](https://user-images.githubusercontent.com/50034678/89936339-74998780-dc4e-11ea-8cbb-7344c91dac7c.png)
 
+
+
+
 4. control keys
 
       q               w               e
 (left&forward)      (just    (right&forward)
                    forward)
 
-
-
+                                                                          U
+                                                                      (speed up)
                       s(stop)
-
-
+                                                                          J
+                                                                      (speed down)
 
       z               x               c
  (left&backward)    (just    (right&backward)
