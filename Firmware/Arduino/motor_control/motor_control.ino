@@ -34,18 +34,24 @@
 //   Basic declaration to use rosserial
 //------------------------------------------------
 ros::NodeHandle  nh;
-
 int buf;
 
 
 
+void speedSetup(int vel_L, int vel_R)
+{
+  analogWrite(EA_L, vel_L);
+  analogWrite(EA_R, vel_R);
+  analogWrite(EB_R, vel_R);
+  analogWrite(EB_L, vel_L);
+}
 
+
+
+// motor driver calibration
 void Forward()
 {
-  analogWrite(EA_L, 40);
-  analogWrite(EA_R, 40);
-  analogWrite(EB_R, 40);
-  analogWrite(EB_L, 40);
+  speedSetup(140, 140);
   
   digitalWrite(A1_L, HIGH);
   digitalWrite(A2_L, LOW);
@@ -60,12 +66,12 @@ void Forward()
   digitalWrite(B4_R, HIGH);
 }
 
+
+
+//  motor driver calibration
 void Backward()
 {
-  analogWrite(EA_L, 40);
-  analogWrite(EA_R, 40);
-  analogWrite(EB_R, 40);
-  analogWrite(EB_L, 40);
+  speedSetup(140, 140);
   
   digitalWrite(A1_L, LOW);
   digitalWrite(A2_L, HIGH);
@@ -80,53 +86,44 @@ void Backward()
   digitalWrite(B4_R, LOW);
 }
 
+
+
 void LeftForward()
 {
   Forward();
-    
-  analogWrite(EA_L, 40);
-  analogWrite(EA_R, 60);
-  analogWrite(EB_R, 60);
-  analogWrite(EB_L, 40);
+  speedSetup(130, 210);
 }
 
-void RightForward()
-{
+
+
+void RightForward() {
   Forward();
-    
-  analogWrite(EA_L, 60);
-  analogWrite(EA_R, 40);
-  analogWrite(EB_R, 40);
-  analogWrite(EB_L, 60);
+  speedSetup(210, 130);
 }
+
+
 
 void LeftBackward()
 {
   Backward();
-    
-  analogWrite(EA_L, 40);
-  analogWrite(EA_R, 60);
-  analogWrite(EB_R, 60);
-  analogWrite(EB_L, 40);
+  speedSetup(130, 210);
 }
+
+
 
 void RightBackward()
 {
   Backward();
-    
-  analogWrite(EA_L, 60);
-  analogWrite(EA_R, 40);
-  analogWrite(EB_R, 40);
-  analogWrite(EB_L, 60);
+  speedSetup(210, 130);
 }
+
+
 
 void Stop()
 {
-  analogWrite(EA_L, 0);
-  analogWrite(EA_R, 0);
-  analogWrite(EB_R, 0);
-  analogWrite(EB_L, 0);
+  speedSetup(0, 0);
 }
+
 
 
 //   Subscriber function
@@ -165,10 +162,7 @@ void setup()
   nh.advertise(chatter);
   nh.subscribe(sub);
 
-  analogWrite(EA_L, 40);
-  analogWrite(EA_R, 40);
-  analogWrite(EB_R, 40);
-  analogWrite(EB_L, 40);
+  speedSetup(0, 0);
   
   pinMode(B4_R, OUTPUT);
   pinMode(B3_R, OUTPUT);
@@ -184,7 +178,7 @@ void setup()
 }
 
 
-//   Publish status information According to the status_analyze()
+//   Publish received data from Raspberry pi
 //---------------------------------------------
 void loop()
 {    
