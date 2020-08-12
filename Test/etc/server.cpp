@@ -1,50 +1,79 @@
-#include <stdio.h>
+#include <iostream>
 #include <stdlib.h>
-#include <string.h>
 #include <unistd.h>
-#include <netinet/in.h>
+#include <string.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>
-
-#define PORT 9000
-
-int main()
+#include <netinet/in.h>
+ 
+ 
+#define BUF_SIZE 512
+#define MAX_BUF 32
+ 
+using namespace std;
+ 
+int main(int argc, char*argv[])
 {
-	int c_socket, s_socket;
+    int server_fd, client_fd;
+    char buffer[BUF_SIZE];
+    struct sockaddr_in server_addr, client_addr;
+    char temp[20];
+    int msg_size;
+    socklen_t len;
+ 
+ 
+    if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
+    {// 
+        perror("Server : Can't open stream socket");
+        exit(0);
+    }
+    //server_Addr 을 NULL로 초기화
+    memset(&server_addr, 0x00, sizeof(server_addr));
+ 
+    //server_addr 셋팅
+    server_addr.sin_family = AF_INET;
+    server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
+    server_addr.sin_port = htons(9999);
+ 
+    if (bind(server_fd, (struct sockaddr *)&server_addr, sizeof(server_addr)) <0)
+    {//bind() 호출
+        perror("Server : Can't bind local address");
+        exit(0);
+    }
+ 
+    if (listen(server_fd, 5) < 0)
+    {//소켓을 수동 대기모드로 설정
+        perror("Server : Can't listening connect");
+        exit(0);
+    }
 
-	struct sockaddr_in s_addr, c_addr;
-	int len, n;
-	char rcvBuffer[BUFSIZ];
+    memset(buffer, 0x00, sizeof(buffer));
+    len = sizeof(client_addr);
+    cout << "Server : wating connection request.\n";
+    client_fd = accept(server_fd, (struct sockaddr *)&client_addr, &len);
+    inet_ntop(AF_INET, &client_addr.sin_addr.s_addr, temp, sizeof(temp));
+    cout << "Server : %s client connected.\n", temp;
 
-	s_socket = socket(PF_INET, SOCK_STREAM, 0);
-
-	memset(&s_addr, 0, sizeof(s_addr));
-	s_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-	s_addr.sin_family = AF_INET;
-	s_addr.sin_port = htons(PORT);
-
-	if(bind(s_socket, (struct sockaddr *)&s_addr, sizeof(s_addr)) == -1) {
-		perror("cannot bind :");
-		return -1;
-	}
-
-	if(listen(s_socket, 5) == -1) {
-		perror("listen failed :");
-		return -1;
-	}
-
-
-	while(1) {
-		len = sizeof(c_addr);
-		c_socket = accept(s_socket, (struct sockaddr *)&c_addr, (socklen_t*)&len);
-
-		while((n = read(c_socket, rcvBuffer, sizeof(rcvBuffer))) != 0) {
-			rcvBuffer[n] = '\0';
-			printf("%s", rcvBuffer);
-			write(c_socket, rcvBuffer, n);
-		}
-		close(c_socket);
-	}
-
-	close(s_socket);
+    while (1)
+    {
+ 
+        if (client_fd < 0)
+        {
+            perror("Server : accept failed");
+            return 0;
+        }
+ 
+        msg_size = read(client_fd, buffer, 1024);
+        cout << buffer << endl;
+        if (!strcmp(buffer, "fin"))
+        {
+            cout << "fin\n";
+            return 0;
+        }
+ 
+ 
+        memset(buffer, 0x00, sizeof(buffer));
+    }
+    close(server_fd);
+    return 0;
 }
