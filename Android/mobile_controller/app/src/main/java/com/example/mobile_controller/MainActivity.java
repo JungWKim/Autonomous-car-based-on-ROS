@@ -7,6 +7,7 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.Intent;//음성인식 관련 패키지
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v4.app.ActivityCompat;//오디오녹음 권한 허용창 생성에 필요
 import android.support.v4.content.ContextCompat;//오디오녹음 권한 허용창 생성에 필요
 import android.support.v7.app.AppCompatActivity;
@@ -15,6 +16,7 @@ import android.speech.RecognitionListener;//음성인식 관련 패키지
 import android.speech.SpeechRecognizer;//음성인식 관련 패키지
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.CompoundButton;
@@ -23,6 +25,10 @@ import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Locale;
 
@@ -31,6 +37,16 @@ public class MainActivity extends AppCompatActivity {
     View dialogView;
     String tmp;
     Integer speed;
+
+    private String html="";
+    private Handler mHandler;
+    private Socket socket;
+
+    private BufferedReader reader;
+    private BufferedWriter writer;
+
+    private String ip="172.30.1.37"; //ip번호
+    private int port=9999;           //prot번호
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -283,6 +299,23 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    void connet(){
+        mHandler = new Handler();
+        Log.w("connect","연결 하는중");
+        // 받아오는거
+        Thread checkUpdate = new Thread() {
+            public void run() {
+                try{
+                    socket = new Socket(ip,port);
+                }catch (IOException e1) {
+                    Log.w("서버접속못함", "서버접속못함");
+                    e1.printStackTrace();
+                }
+            }
+        };
+        checkUpdate.start();
+    }
+
     @Override
     protected void onStop()
     {
@@ -296,6 +329,13 @@ public class MainActivity extends AppCompatActivity {
         editor.putInt("speed", Integer.parseInt(tmp));
 
         editor.commit();
+
+        super.onStop();
+        try {
+            socket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     //음성인식 처리부
