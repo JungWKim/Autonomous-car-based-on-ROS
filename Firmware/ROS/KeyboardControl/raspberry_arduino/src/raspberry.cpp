@@ -14,6 +14,8 @@
 #define LEFTBACKWARD  5
 #define RIGHTBACKWARD 6
 #define STOP          7
+#define SPEEDUP       8
+#define SPEEDDOWN     9
 
 static struct termios initial_settings, new_settings;
 static int peek_character = -1;
@@ -76,6 +78,16 @@ int main(int argc, char **argv)
 				      	break;
 				case 's': 
 					msg.data = STOP;
+					ROS_INFO("send msg = %d", msg.data);
+					ros_pub.publish(msg);
+				      	break;
+				case 'u': 
+					msg.data = SPEEDUP;
+					ROS_INFO("send msg = %d", msg.data);
+					ros_pub.publish(msg);
+				      	break;
+				case 'j': 
+					msg.data = SPEEDDOWN;
 					ROS_INFO("send msg = %d", msg.data);
 					ros_pub.publish(msg);
 				      	break;

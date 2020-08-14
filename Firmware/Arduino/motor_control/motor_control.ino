@@ -34,16 +34,16 @@
 //   Basic declaration to use rosserial
 //------------------------------------------------
 ros::NodeHandle  nh;
-int buf;
+int buf, vel_L=140, vel_R=140;
 
 
 
-void speedSetup(int vel_L, int vel_R)
+void speedSetup(int left, int right)
 {
-  analogWrite(EA_L, vel_L);
-  analogWrite(EA_R, vel_R);
-  analogWrite(EB_R, vel_R);
-  analogWrite(EB_L, vel_L);
+  analogWrite(EA_L, left);
+  analogWrite(EA_R, right);
+  analogWrite(EB_R, right);
+  analogWrite(EB_L, left);
 }
 
 
@@ -51,7 +51,7 @@ void speedSetup(int vel_L, int vel_R)
 // motor driver calibration
 void Forward()
 {
-  speedSetup(140, 140);
+  speedSetup(vel_L, vel_R);
   
   digitalWrite(A1_L, HIGH);
   digitalWrite(A2_L, LOW);
@@ -71,7 +71,7 @@ void Forward()
 //  motor driver calibration
 void Backward()
 {
-  speedSetup(140, 140);
+  speedSetup(vel_L, vel_R);
   
   digitalWrite(A1_L, LOW);
   digitalWrite(A2_L, HIGH);
@@ -91,14 +91,14 @@ void Backward()
 void LeftForward()
 {
   Forward();
-  speedSetup(130, 210);
+  speedSetup(vel_L, vel_R + 80);
 }
 
 
 
 void RightForward() {
   Forward();
-  speedSetup(210, 130);
+  speedSetup(vel_L + 80, vel_R);
 }
 
 
@@ -106,7 +106,7 @@ void RightForward() {
 void LeftBackward()
 {
   Backward();
-  speedSetup(130, 210);
+  speedSetup(vel_L, vel_R + 80);
 }
 
 
@@ -114,7 +114,7 @@ void LeftBackward()
 void RightBackward()
 {
   Backward();
-  speedSetup(210, 130);
+  speedSetup(vel_L + 80, vel_R);
 }
 
 
@@ -122,6 +122,46 @@ void RightBackward()
 void Stop()
 {
   speedSetup(0, 0);
+}
+
+
+
+void SpeedUp(int past_key)
+{
+  vel_L += 10;
+  vel_R += 10;
+  
+  if(vel_L > 170) vel_L = 170;
+  if(vel_R > 170) vel_R = 170;
+
+  if(past_key == 1 || past_key == 2)
+    speedSetup(vel_L, vel_R);
+  else if(past_key == 3 || past_key == 5)
+    speedSetup(vel_L, vel_R + 80);
+  else if(past_key == 4 || past_key == 6)
+    speedSetup(vel_L + 80, vel_R);
+  else if(past_key == 7)
+    speedSetup(0, 0);
+}
+
+
+
+void SpeedDown(int past_key)
+{
+  vel_L -= 10;
+  vel_R -= 10;
+  
+  if(vel_L < 80)  vel_L = 80;
+  if(vel_R < 80) vel_R = 80;
+  
+  if(past_key == 1 || past_key == 2)
+    speedSetup(vel_L, vel_R);
+  else if(past_key == 3 || past_key == 5)
+    speedSetup(vel_L, vel_R + 80);
+  else if(past_key == 4 || past_key == 6)
+    speedSetup(vel_L + 80, vel_R);
+  else if(past_key == 7)
+    speedSetup(0, 0);
 }
 
 
@@ -138,6 +178,8 @@ void messageCb(const std_msgs::Int32& msg) {
     case 5: LeftBackward();  buf = msg.data; break;
     case 6: RightBackward(); buf = msg.data; break;
     case 7: Stop();          buf = msg.data; break;
+    case 8: SpeedUp(buf);    break;
+    case 9: SpeedDown(buf);  break;
   }
   
 }
