@@ -1,5 +1,5 @@
 #include <ros/ros.h>
-#include "keyboard_control/FromTx2.h"
+#include "keyboard_control/teleop_car.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <termios.h>
@@ -34,10 +34,10 @@ int main(int argc, char **argv)
 
 	init_keyboard();
 	
-	ros::init(argc, argv, "tx2");
+	ros::init(argc, argv, "car_teleop_key");
 	ros::NodeHandle nh;
-	ros::Publisher ros_pub = nh.advertise<keyboard_control::FromTx2>("toArduino", 100);
-	keyboard_control::FromTx2 msg;
+	ros::Publisher ros_pub = nh.advertise<keyboard_control::teleop_car>("toArduino", 100);
+	keyboard_control::teleop_car msg;
 
 	//  27 equals ESC
 	while(ros::ok() && key != 27)
