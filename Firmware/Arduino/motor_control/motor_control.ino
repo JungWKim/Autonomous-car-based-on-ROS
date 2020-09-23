@@ -14,10 +14,14 @@
 //  Assigning pin numbers
 //-----------------------------------------------
 
+#define hall_A_g
+#define hall_A_y
 #define EA  13
 #define A1  12
 #define A2  11
 
+#define hall_B_g
+#define hall_B_y
 #define EB  10
 #define B3   9
 #define B4   8
@@ -27,7 +31,6 @@
 //------------------------------------------------
 ros::NodeHandle  nh;
 int buf, vel_L=100, vel_R=100;
-
 
 
 void speedSetup(int left, int right)
