@@ -14,36 +14,26 @@
 //  Assigning pin numbers
 //-----------------------------------------------
 
-#define EA_R   2
-#define A1_R  53
-#define A2_R  51
+#define EA  13
+#define A1  12
+#define A2  11
 
-#define EB_R  10
-#define B3_R  43
-#define B4_R  41
-
-#define EA_L   8
-#define A1_L  22
-#define A2_L  24
-
-#define EB_L   3
-#define B3_L   4
-#define B4_L   5
+#define EB  10
+#define B3   9
+#define B4   8
 
 
 //   Basic declaration to use rosserial
 //------------------------------------------------
 ros::NodeHandle  nh;
-int buf, vel_L=140, vel_R=140;
+int buf, vel_L=100, vel_R=100;
 
 
 
 void speedSetup(int left, int right)
 {
-  analogWrite(EA_L, left);
-  analogWrite(EA_R, right);
-  analogWrite(EB_R, right);
-  analogWrite(EB_L, left);
+  analogWrite(EA, left);
+  analogWrite(EB, left);
 }
 
 
@@ -53,17 +43,11 @@ void Forward()
 {
   speedSetup(vel_L, vel_R);
   
-  digitalWrite(A1_L, HIGH);
-  digitalWrite(A2_L, LOW);
-  
-  digitalWrite(B3_L, HIGH);
-  digitalWrite(B4_L, LOW);
+  digitalWrite(A1, HIGH);
+  digitalWrite(A2, LOW);
 
-  digitalWrite(A1_R, LOW);
-  digitalWrite(A2_R, HIGH);
-
-  digitalWrite(B3_R, LOW);
-  digitalWrite(B4_R, HIGH);
+  digitalWrite(B3, LOW);
+  digitalWrite(B4, HIGH);
 }
 
 
@@ -73,17 +57,11 @@ void Backward()
 {
   speedSetup(vel_L, vel_R);
   
-  digitalWrite(A1_L, LOW);
-  digitalWrite(A2_L, HIGH);
-  
-  digitalWrite(B3_L, LOW);
-  digitalWrite(B4_L, HIGH);
+  digitalWrite(A1, LOW);
+  digitalWrite(A2, HIGH);
 
-  digitalWrite(A1_R, HIGH);
-  digitalWrite(A2_R, LOW);
-
-  digitalWrite(B3_R, HIGH);
-  digitalWrite(B4_R, LOW);
+  digitalWrite(B3, HIGH);
+  digitalWrite(B4, LOW);
 }
 
 
@@ -125,27 +103,29 @@ void Stop()
 }
 
 
-
+//to keep the car's moving direction, get the previous driving method as a parameter
 void SpeedUp(int past_key)
 {
   vel_L += 10;
   vel_R += 10;
   
-  if(vel_L > 170) vel_L = 170;
-  if(vel_R > 170) vel_R = 170;
+  if(vel_L > 200) vel_L = 200;
+  if(vel_R > 200) vel_R = 200;
 
-  if(past_key == 1 || past_key == 2)
-    speedSetup(vel_L, vel_R);
-  else if(past_key == 3 || past_key == 5)
-    speedSetup(vel_L, vel_R + 80);
-  else if(past_key == 4 || past_key == 6)
-    speedSetup(vel_L + 80, vel_R);
-  else if(past_key == 7)
-    speedSetup(0, 0);
+  switch(past_key)
+  {
+    case 1:
+    case 2: speedSetup(vel_L, vel_R); break;
+    case 3:
+    case 4: speedSetup(vel_L, vel_R + 80); break;
+    case 5:
+    case 6: speedSetup(vel_L + 80, vel_R); break;
+    case 7: speedSetup(0, 0); break;
+  }
 }
 
 
-
+//to keep the car's moving direction, get the previous driving method as a parameter
 void SpeedDown(int past_key)
 {
   vel_L -= 10;
@@ -154,14 +134,16 @@ void SpeedDown(int past_key)
   if(vel_L < 80)  vel_L = 80;
   if(vel_R < 80) vel_R = 80;
   
-  if(past_key == 1 || past_key == 2)
-    speedSetup(vel_L, vel_R);
-  else if(past_key == 3 || past_key == 5)
-    speedSetup(vel_L, vel_R + 80);
-  else if(past_key == 4 || past_key == 6)
-    speedSetup(vel_L + 80, vel_R);
-  else if(past_key == 7)
-    speedSetup(0, 0);
+  switch(past_key)
+  {
+    case 1:
+    case 2: speedSetup(vel_L, vel_R); break;
+    case 3:
+    case 4: speedSetup(vel_L, vel_R + 80); break;
+    case 5:
+    case 6: speedSetup(vel_L + 80, vel_R); break;
+    case 7: speedSetup(0, 0); break;
+  }
 }
 
 
@@ -174,8 +156,8 @@ void messageCb(const std_msgs::Int32& msg) {
     case 1: Forward();       buf = msg.data; break;
     case 2: Backward();      buf = msg.data; break;
     case 3: LeftForward();   buf = msg.data; break;
-    case 4: RightForward();  buf = msg.data; break;
-    case 5: LeftBackward();  buf = msg.data; break;
+    case 4: LeftBackward();  buf = msg.data; break;
+    case 5: RightForward();  buf = msg.data; break;
     case 6: RightBackward(); buf = msg.data; break;
     case 7: Stop();          buf = msg.data; break;
     case 8: SpeedUp(buf);    break;
@@ -206,17 +188,11 @@ void setup()
 
   speedSetup(0, 0);
   
-  pinMode(B4_R, OUTPUT);
-  pinMode(B3_R, OUTPUT);
+  pinMode(A2, OUTPUT);
+  pinMode(A1, OUTPUT);
 
-  pinMode(A1_L, OUTPUT);
-  pinMode(A2_L, OUTPUT);
-  
-  pinMode(A2_R, OUTPUT);
-  pinMode(A1_R, OUTPUT);
-
-  pinMode(B3_L, OUTPUT);
-  pinMode(B4_L, OUTPUT);
+  pinMode(B3, OUTPUT);
+  pinMode(B4, OUTPUT);
 }
 
 
@@ -227,5 +203,5 @@ void loop()
   int_msg.data = buf;
   chatter.publish(&int_msg);
   nh.spinOnce();
-  delay(500);
+  delay(100);
 }
