@@ -33,7 +33,7 @@ int buf, vel_L=100, vel_R=100;
 void speedSetup(int left, int right)
 {
   analogWrite(EA, left);
-  analogWrite(EB, left);
+  analogWrite(EB, right);
 }
 
 
@@ -51,7 +51,6 @@ void Forward()
 }
 
 
-
 //  motor driver calibration
 void Backward()
 {
@@ -65,7 +64,6 @@ void Backward()
 }
 
 
-
 void LeftForward()
 {
   Forward();
@@ -73,12 +71,10 @@ void LeftForward()
 }
 
 
-
 void RightForward() {
   Forward();
   speedSetup(vel_L + 80, vel_R);
 }
-
 
 
 void LeftBackward()
@@ -88,13 +84,11 @@ void LeftBackward()
 }
 
 
-
 void RightBackward()
 {
   Backward();
   speedSetup(vel_L + 80, vel_R);
 }
-
 
 
 void Stop()
@@ -187,10 +181,12 @@ void setup()
   nh.subscribe(sub);
 
   speedSetup(0, 0);
-  
+
+  pinMode(EA, OUTPUT);
   pinMode(A2, OUTPUT);
   pinMode(A1, OUTPUT);
 
+  pinMode(EB, OUTPUT);
   pinMode(B3, OUTPUT);
   pinMode(B4, OUTPUT);
 }
