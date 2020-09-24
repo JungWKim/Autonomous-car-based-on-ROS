@@ -16,21 +16,23 @@
 
 #define hall_A_g
 #define hall_A_y
+
 #define EA  13
 #define A1  12
 #define A2  11
 
 #define hall_B_g
 #define hall_B_y
-#define EB  10
-#define B3   9
-#define B4   8
+
+#define EB   8
+#define B3  10
+#define B4   9
 
 
 //   Basic declaration to use rosserial
 //------------------------------------------------
 ros::NodeHandle  nh;
-int buf, vel_L=100, vel_R=100;
+int buf, vel_L=100, vel_R=150;
 
 
 void speedSetup(int left, int right)
@@ -41,29 +43,23 @@ void speedSetup(int left, int right)
 
 
 
-// motor driver calibration
 void Forward()
 {
-  speedSetup(vel_L, vel_R);
-  
-  digitalWrite(A1, HIGH);
-  digitalWrite(A2, LOW);
+  digitalWrite(A2, HIGH);
+  digitalWrite(A1, LOW);
 
-  digitalWrite(B3, LOW);
-  digitalWrite(B4, HIGH);
+  digitalWrite(B4, LOW);
+  digitalWrite(B3, HIGH);
 }
 
 
-//  motor driver calibration
 void Backward()
 {
-  speedSetup(vel_L, vel_R);
-  
-  digitalWrite(A1, LOW);
-  digitalWrite(A2, HIGH);
+  digitalWrite(A2, LOW);
+  digitalWrite(A1, HIGH);
 
-  digitalWrite(B3, HIGH);
-  digitalWrite(B4, LOW);
+  digitalWrite(B4, HIGH);
+  digitalWrite(B3, LOW);
 }
 
 
@@ -74,7 +70,8 @@ void LeftForward()
 }
 
 
-void RightForward() {
+void RightForward()
+{
   Forward();
   speedSetup(vel_L + 80, vel_R);
 }
@@ -150,11 +147,11 @@ void SpeedDown(int past_key)
 void messageCb(const std_msgs::Int32& msg) {
 
   switch(msg.data){
-    case 1: Forward();       buf = msg.data; break;
-    case 2: Backward();      buf = msg.data; break;
+    case 1: Forward();       speedSetup(vel_L, vel_R); buf = msg.data; break;
+    case 2: Backward();      speedSetup(vel_L, vel_R); buf = msg.data;  break;
     case 3: LeftForward();   buf = msg.data; break;
-    case 4: LeftBackward();  buf = msg.data; break;
-    case 5: RightForward();  buf = msg.data; break;
+    case 4: RightForward();  buf = msg.data; break;
+    case 5: LeftBackward();  buf = msg.data; break;
     case 6: RightBackward(); buf = msg.data; break;
     case 7: Stop();          buf = msg.data; break;
     case 8: SpeedUp(buf);    break;
@@ -183,15 +180,15 @@ void setup()
   nh.advertise(chatter);
   nh.subscribe(sub);
 
-  speedSetup(0, 0);
-
-  pinMode(EA, OUTPUT);
+  //pinMode(EA, OUTPUT);
   pinMode(A2, OUTPUT);
   pinMode(A1, OUTPUT);
 
-  pinMode(EB, OUTPUT);
+  //pinMode(EB, OUTPUT);
   pinMode(B3, OUTPUT);
   pinMode(B4, OUTPUT);
+
+  speedSetup(0, 0);
 }
 
 
