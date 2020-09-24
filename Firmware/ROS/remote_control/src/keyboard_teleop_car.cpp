@@ -28,7 +28,7 @@ int main(int argc, char **argv)
 	remote_control::teleop_car msg;
 
 	//  27 equals ESC
-	while(ros::ok() && key != 27)
+	while(ros::ok())
 	{
 		if(kbhit())
 		{
@@ -36,7 +36,7 @@ int main(int argc, char **argv)
 			{
 				case 'w': msg.data = FORWARD;       break;
 				case 'x': msg.data = BACKWARD;      break;
-				case 'q': msg.data= LEFTFORWARD;    break;
+				case 'q': msg.data = LEFTFORWARD;   break;
 				case 'e': msg.data = RIGHTFORWARD;  break;
 				case 'z': msg.data = LEFTBACKWARD;  break;
 				case 'c': msg.data = RIGHTBACKWARD; break;
@@ -44,13 +44,20 @@ int main(int argc, char **argv)
 				case 'u': msg.data = SPEEDUP;       break;
 				case 'j': msg.data = SPEEDDOWN;     break;
 			}
-			ROS_INFO("send msg = %d", msg.data);
-			ros_pub.publish(msg);
+
+            if(key != 27)
+            {
+			    ros_pub.publish(msg);
+			    ROS_INFO("key input = %c", (char)key);
+			    ROS_INFO("send msg = %d", msg.data);
+            }
+            else break;
 		}
 	}
-
 	msg.data = STOP;
 	ros_pub.publish(msg);
+	ROS_INFO("key input = ESC");
+	ROS_INFO("send msg = %d", msg.data);
 	ROS_INFO("Program Exiting..........");
 	close_keyboard();
 
