@@ -85,15 +85,23 @@ int main(int argc, char*argv[])
 		{
             switch(buffer[0])
             {
+                //front
                 case 'W': break;
+                //back
                 case 'X': break;
-                case 'N': break;
+                //stop
                 case 'S': break;
+                //front left
                 case 'Q': break;
+                //front right
                 case 'E': break;
+                //back left
                 case 'Z': break;
+                //back right
                 case 'C': break;
+                //speed up
                 case 'U': break;
+                //speed down
                 case 'J': break;
             }
             ROS_INFO("buffer : %s", buffer);
