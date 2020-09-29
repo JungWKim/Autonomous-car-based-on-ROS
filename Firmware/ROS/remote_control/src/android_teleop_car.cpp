@@ -75,7 +75,7 @@ int main(int argc, char*argv[])
     inet_ntop(AF_INET, &client_addr.sin_addr.s_addr, temp, sizeof(temp));
     ROS_INFO("Server : %s client connected.", temp);
 
-    while (ros::ok())
+    while (1)
     {
 	    client_fd = accept(server_fd, (struct sockaddr *)&client_addr, &len);
   	    inet_ntop(AF_INET, &client_addr.sin_addr.s_addr, temp, sizeof(temp));
@@ -85,33 +85,24 @@ int main(int argc, char*argv[])
 		{
             switch(buffer[0])
             {
-                //front
-                case 'W': break;
-                //back
-                case 'X': break;
-                //stop
-                case 'S': break;
-                //front left
-                case 'Q': break;
-                //front right
-                case 'E': break;
-                //back left
-                case 'Z': break;
-                //back right
-                case 'C': break;
-                //speed up
-                case 'U': break;
-                //speed down
-                case 'J': break;
+                case 'W': msg.data = FORWARD;       break;
+                case 'X': msg.data = BACKWARD;      break;
+                case 'S': msg.data = STOP;          break;
+                case 'Q': msg.data = LEFTFORWARD;   break;
+                case 'E': msg.data = RIGHTFORWARD;  break;
+                case 'Z': msg.data = LEFTBACKWARD;  break;
+                case 'C': msg.data = RIGHTBACKWARD; break;
+                case 'U': msg.data = SPEEDUP;       break;
+                case 'J': msg.data = SPEEDDOWN;     break;
+                //kill switch code//
             }
-            ROS_INFO("buffer : %s", buffer);
-            ROS_INFO("send msg : %d", msg.data);
             ros_pub.publish(msg);
+            ROS_INFO("buffer : %c", buffer[0]);
+            ROS_INFO("send msg : %d", msg.data);
+            break;
 		}
-        
         memset(buffer, 0x00, sizeof(buffer));
     }
-
     close(server_fd);
     return 0;
 }

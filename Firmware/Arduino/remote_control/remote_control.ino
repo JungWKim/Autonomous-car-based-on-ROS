@@ -197,11 +197,9 @@ void setup()
   nh.advertise(chatter);
   nh.subscribe(sub);
 
-  pinMode(EA, OUTPUT);
   pinMode(A2, OUTPUT);
   pinMode(A1, OUTPUT);
 
-  pinMode(EB, OUTPUT);
   pinMode(B3, OUTPUT);
   pinMode(B4, OUTPUT);
 
@@ -216,5 +214,5 @@ void loop()
   int_msg.data = buf;
   chatter.publish(&int_msg);
   nh.spinOnce();
-  delay(100);
+  delay(500);
 }
