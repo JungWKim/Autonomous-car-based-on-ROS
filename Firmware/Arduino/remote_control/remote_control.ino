@@ -1,6 +1,7 @@
 #include <ros.h>
 #include <stdio.h>
 #include <std_msgs/Int32.h>
+#include <MsTimer2.h>
 
 /*----------------
  * How to control motor
@@ -13,13 +14,12 @@
  */
 
 //  Assigning pin numbers
-//-----------------------------------------------
+//------------------------------------------------
 
-#define encoderL_g 3
-#define encoderL_y 2
-
+#define encoderL    2
+#define encoderL_g  3
+#define encoderR   21
 #define encoderR_g 20
-#define encoderR_y 21
 
 #define EA  13
 #define A1  12
@@ -29,15 +29,125 @@
 #define B4   9
 #define EB   8
 
-
 //   Basic declaration to use rosserial
 //------------------------------------------------
 ros::NodeHandle  nh;
-int buf, vel_L = 100, vel_R = 100;
+std_msgs::Int32 int_msg;
 
 
+//   generate variables
+//------------------------------------------------
+int buf;/*buffer to store previous state*/ 
+int vel_L = 100, vel_R = 100;
+volatile int leftTargetSpeed, rightTargetSpeed;
+
+const int ppr = 50;
+volatile int pulseCountL = 0, pulseCountR = 0;
+volatile int rpmL, rpmR;
+
+const float Kp = 1.;
+const float Ki = 1.;
+const float Kd = 1.;
+
+volatile int errorL, errorR;
+volatile float prev_errorL = 0, prev_errorR = 0;
+volatile float integral_errorL = 0, integral_errorR = 0;
+
+volatile double PcontrolL, IcontrolL, DcontrolL, PIDcontrolL;
+volatile double PcontrolR, IcontrolR, DcontrolR, PIDcontrolR;
+
+
+//   interrupt function definitions
+//------------------------------------------------
+
+void calculateRpm()
+{
+    rpmL = int(pulseCountL / 0.5 / ppr) * 60;
+    rpmR = int(pulseCountR / 0.5 / ppr) * 60;
+    Serial.print("Left rpm: ");
+    Serial.println(rpmL);
+    Serial.print("Right rpm: ");
+    Serial.println(rpmR);
+    pulseCountL = 0;
+    pulseCountR = 0;
+}
+
+
+int convertSpeed2Rpm(int input)
+{
+  if(input <= 50)       return 60;
+  else if(input == 60)  return 240;
+  else if(input == 70)  return 360;
+  else if(input == 80)  return 420;
+  else if(input == 90)  return 540;
+  else if(input == 100) return 600;
+  else if(input == 110) return 660;
+  else if(input == 120) return 720;
+  else if(input == 130) return 780;
+  else if(input == 140) return 780;
+  else if(input == 150) return 840;
+  else if(input == 160) return 840;
+  else if(input == 170) return 900;
+  else if(input == 180) return 900;
+  else if(input == 190) return 900;
+  else if(input == 200) return 960;
+  else if(input == 210) return 960;
+  else if(input == 220) return 960;
+  else if(input == 230) return 1020;
+  else if(input == 240) return 1020;
+  else if(input == 250) return 1080;
+}
+
+
+void PID_L()
+{
+  int leftTargetRpm = convertSpeed2Rpm(leftTargetSpeed);
+  errorL = leftTargetRpm - rpmL;
+  integral_errorL += (errorL * 0.004);
+  PcontrolL = Kp * errorL;
+  IcontrolL = Ki * integral_errorL;
+  DcontrolL = (Kd * (errorL - prev_errorL));
+  PIDcontrolL = PcontrolL + IcontrolL + DcontrolL;
+  vel_L += int((PIDcontrolL * 255) / 1080);
+  analogWrite(EA, vel_L);
+  prev_errorL = errorL;
+}
+
+
+void PID_R()
+{
+  int rightTargetRpm = convertSpeed2Rpm(rightTargetSpeed);
+  errorR = rightTargetRpm - rpmR;
+  integral_errorR += (errorR * 0.004);
+  PcontrolR = Kp * errorR;
+  IcontrolR = Ki * integral_errorR;
+  DcontrolR = (Kd * (errorR - prev_errorR));
+  PIDcontrolR = PcontrolR + IcontrolR + DcontrolR;
+  vel_R += int((PIDcontrolR * 255) / 1080);
+  analogWrite(EB, vel_R);
+  prev_errorR = errorR;
+}
+
+
+void pulseCounterL()
+{
+  pulseCountL++;
+  PID_L();
+}
+
+void pulseCounterR()
+{
+  pulseCountR++;
+  PID_R();
+}
+
+
+//   function definitions
+//------------------------------------------------
 void speedSetup(int left, int right)
 {
+  leftTargetSpeed = left;
+  rightTargetSpeed = right;
   analogWrite(EA, left);
   analogWrite(EB, right);
 }
@@ -51,7 +161,7 @@ void moveFront(int past_key)
   digitalWrite(B3, LOW);
   if(past_key == 7)
   {
-    speedSetup(vel_L, vel_R);
+    speedSetup(vel_L+50, vel_R+50);
     delay(500);
   }
   buf = past_key;
@@ -64,9 +174,10 @@ void moveBack(int past_key)
   digitalWrite(A1, HIGH);
   digitalWrite(B4, LOW);
   digitalWrite(B3, HIGH);
+
   if(past_key == 7)
   {
-    speedSetup(vel_L, vel_R);
+    speedSetup(vel_L+50, vel_R+50);
     delay(500);
   }
   buf = past_key;
@@ -111,7 +222,11 @@ void RightBackward()
 
 void Stop(int past_key)
 {
-  speedSetup(0, 0);   
+  for(int i = (vel_L >= vel_R) ? vel_L:vel_R ; i>0 ; i-=10)
+  {
+      speedSetup(i, i);
+      delay(500);
+  }   
   buf = past_key;
 }
 
@@ -119,11 +234,11 @@ void Stop(int past_key)
 //to keep the car's moving direction, get the previous driving method as a parameter
 void SpeedUp(int past_key)
 {
-  vel_L += 5;
-  vel_R += 5;
+  vel_L += 10;
+  vel_R += 10;
 
-  if(vel_L > 255) vel_L = 255;
-  if(vel_R > 255) vel_R = 255;
+  if(vel_L > 250) vel_L = 250;
+  if(vel_R > 250) vel_R = 250;
   
   switch(past_key)
   {
@@ -141,10 +256,10 @@ void SpeedUp(int past_key)
 //to keep the car's moving direction, get the previous driving method as a parameter
 void SpeedDown(int past_key)
 {
-  vel_L -= 5;
-  vel_R -= 5;
+  vel_L -= 10;
+  vel_R -= 10;
 
-  if(vel_L < 40)  vel_L = 40;
+  if(vel_L < 40) vel_L = 40;
   if(vel_R < 40) vel_R = 40;
   
   switch(past_key)
@@ -160,8 +275,7 @@ void SpeedDown(int past_key)
 }
 
 
-
-//   Subscriber function
+//   Subscriber handler
 //------------------------------------------------
 void messageCb(const std_msgs::Int32& msg) {
   switch(msg.data){
@@ -176,15 +290,12 @@ void messageCb(const std_msgs::Int32& msg) {
     case 9: SpeedDown(buf);  break;
   }
 }
-ros::Subscriber<std_msgs::Int32> sub("toArduino", messageCb);
 
 
-std_msgs::Int32 int_msg;
-
-//     Publisher registration part
+// declare publisher and subscriber
 //----------------------------------------------
 ros::Publisher chatter("chatter", &int_msg);
-
+ros::Subscriber<std_msgs::Int32> sub("toArduino", messageCb);
 
 
 //  1. Setup all pins as output
@@ -192,18 +303,29 @@ ros::Publisher chatter("chatter", &int_msg);
 //----------------------------------------------
 void setup()
 {
-  Serial.begin(57600);
   nh.initNode();
   nh.advertise(chatter);
   nh.subscribe(sub);
 
+  pinMode(encoderL, INPUT);
+  pinMode(EA, OUTPUT);
   pinMode(A2, OUTPUT);
   pinMode(A1, OUTPUT);
 
+  pinMode(encoderR, INPUT);
+  pinMode(EB, OUTPUT);
   pinMode(B3, OUTPUT);
   pinMode(B4, OUTPUT);
 
-  speedSetup(0, 0);
+  attachInterrupt(digitalPinToInterrupt(encoderL), pulseCounterL, RISING);
+  attachInterrupt(digitalPinToInterrupt(encoderR), pulseCounterR, RISING);
+  //attachInterrupt(digitalPinToInterrupt(encoderL_g), PID_L, RISING);
+  //attachInterrupt(digitalPinToInterrupt(encoderR_g), PID_R, RISING);
+   
+  MsTimer2::set(500, calculateRpm);
+  MsTimer2::start();
+  Serial.begin(57600);
+  speedSetup(0, 0);//initial speed >> 0
 }
 
 
@@ -214,5 +336,5 @@ void loop()
   int_msg.data = buf;
   chatter.publish(&int_msg);
   nh.spinOnce();
-  delay(500);
+  delay(100);
 }
