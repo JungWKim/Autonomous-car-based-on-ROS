@@ -1,5 +1,6 @@
 #include <ros.h>
 #include <stdio.h>
+#include <std_msgs/Int32MultiArray.h>
 #include <std_msgs/Int32.h>
 #include <MsTimer2.h>
 
@@ -32,7 +33,7 @@
 //   Basic declaration to use rosserial
 //------------------------------------------------
 ros::NodeHandle  nh;
-std_msgs::Int32 int_msg;
+std_msgs::Int32MultiArray status_msg;
 
 
 //   generate variables
@@ -294,7 +295,7 @@ void messageCb(const std_msgs::Int32& msg) {
 
 // declare publisher and subscriber
 //----------------------------------------------
-ros::Publisher chatter("chatter", &int_msg);
+ros::Publisher chatter("chatter", &status_msg);
 ros::Subscriber<std_msgs::Int32> sub("toArduino", messageCb);
 
 
@@ -333,8 +334,11 @@ void setup()
 //---------------------------------------------
 void loop()
 {    
-  int_msg.data = buf;
-  chatter.publish(&int_msg);
+  status_msg.data[0] = vel_L;
+  status_msg.data[1] = vel_R;
+  status_msg.data[2] = rpmL;
+  status_msg.data[3] = rpmR;
+  chatter.publish(&status_msg);
   nh.spinOnce();
   delay(100);
 }
