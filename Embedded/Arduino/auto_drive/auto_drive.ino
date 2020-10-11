@@ -35,7 +35,7 @@ MCP_CAN CAN0(10);
 //------------------------------------------------
 int buf;/*buffer to store previous state*/ 
 int vel_L = 100, vel_R = 100;
-unsigned char can_tx_buffer[2];
+unsigned char can_tx_buffer[1];
 unsigned char can_rx_buffer;
 unsigned char len = 0;
 long unsigned int rxId;
@@ -65,10 +65,8 @@ void calculateRpm()
   rpmL = int(pulseCountL / 0.5 / ppr) * 60;
   rpmR = int(pulseCountR / 0.5 / ppr) * 60;
   char msg;
-  msg = rpmL;
+  msg = (char)((rpmL + rpmR) / 2);
   can_tx_buffer[0] = msg;
-  msg = rpmR;
-  can_tx_buffer[1] = msg;
   CAN0.sendMsgBuf(0x00, 0, 1, can_tx_buffer);
   Serial.print("Left rpm: ");
   Serial.println(rpmL);
@@ -82,26 +80,26 @@ void calculateRpm()
 int convertSpeed2Rpm(int input)
 {
   if(input <= 50)       return 60;
-  else if(input == 60)  return 240;
-  else if(input == 70)  return 360;
-  else if(input == 80)  return 420;
-  else if(input == 90)  return 540;
-  else if(input == 100) return 600;
-  else if(input == 110) return 660;
-  else if(input == 120) return 720;
-  else if(input == 130) return 780;
-  else if(input == 140) return 780;
-  else if(input == 150) return 840;
-  else if(input == 160) return 840;
-  else if(input == 170) return 900;
-  else if(input == 180) return 900;
-  else if(input == 190) return 900;
-  else if(input == 200) return 960;
-  else if(input == 210) return 960;
-  else if(input == 220) return 960;
-  else if(input == 230) return 1020;
-  else if(input == 240) return 1020;
-  else if(input == 250) return 1080;
+  else if(input <= 60)  return 240;
+  else if(input <= 70)  return 360;
+  else if(input <= 80)  return 420;
+  else if(input <= 90)  return 540;
+  else if(input <= 100) return 600;
+  else if(input <= 110) return 660;
+  else if(input <= 120) return 720;
+  else if(input <= 130) return 780;
+  else if(input <= 140) return 780;
+  else if(input <= 150) return 840;
+  else if(input <= 160) return 840;
+  else if(input <= 170) return 900;
+  else if(input <= 180) return 900;
+  else if(input <= 190) return 900;
+  else if(input <= 200) return 960;
+  else if(input <= 210) return 960;
+  else if(input <= 220) return 960;
+  else if(input <= 230) return 1020;
+  else if(input <= 240) return 1020;
+  else                  return 1080;
 }
 
 
@@ -325,8 +323,8 @@ void loop()
         case 4: moveFront(msg); RightForward();  break;
         case 5: moveBack(msg);  LeftBackward();  break;
         case 6: moveBack(msg);  RightBackward(); break;
-        case 7: Stop(msg);  break;
-        case 8: SpeedUp(buf);    break;
-        case 9: SpeedDown(buf);  break;
+        case 7: Stop(msg);      break;
+        case 8: SpeedUp(buf);   break;
+        case 9: SpeedDown(buf); break;
     }
 }

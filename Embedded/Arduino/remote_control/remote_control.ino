@@ -77,26 +77,26 @@ void calculateRpm()
 int convertSpeed2Rpm(int input)
 {
   if(input <= 50)       return 60;
-  else if(input == 60)  return 240;
-  else if(input == 70)  return 360;
-  else if(input == 80)  return 420;
-  else if(input == 90)  return 540;
-  else if(input == 100) return 600;
-  else if(input == 110) return 660;
-  else if(input == 120) return 720;
-  else if(input == 130) return 780;
-  else if(input == 140) return 780;
-  else if(input == 150) return 840;
-  else if(input == 160) return 840;
-  else if(input == 170) return 900;
-  else if(input == 180) return 900;
-  else if(input == 190) return 900;
-  else if(input == 200) return 960;
-  else if(input == 210) return 960;
-  else if(input == 220) return 960;
-  else if(input == 230) return 1020;
-  else if(input == 240) return 1020;
-  else if(input == 250) return 1080;
+  else if(input <= 60)  return 240;
+  else if(input <= 70)  return 360;
+  else if(input <= 80)  return 420;
+  else if(input <= 90)  return 540;
+  else if(input <= 100) return 600;
+  else if(input <= 110) return 660;
+  else if(input <= 120) return 720;
+  else if(input <= 130) return 780;
+  else if(input <= 140) return 780;
+  else if(input <= 150) return 840;
+  else if(input <= 160) return 840;
+  else if(input <= 170) return 900;
+  else if(input <= 180) return 900;
+  else if(input <= 190) return 900;
+  else if(input <= 200) return 960;
+  else if(input <= 210) return 960;
+  else if(input <= 220) return 960;
+  else if(input <= 230) return 1020;
+  else if(input <= 240) return 1020;
+  else                  return 1080;
 }
 
 
