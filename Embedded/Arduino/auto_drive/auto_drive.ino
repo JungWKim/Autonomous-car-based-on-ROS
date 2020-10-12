@@ -29,6 +29,9 @@
 #define B4   9
 #define EB   8
 
+#define trig 37
+#define echo 33
+
 MCP_CAN CAN0(10);
 
 //   generate variables
@@ -43,7 +46,7 @@ volatile int leftTargetSpeed, rightTargetSpeed;
 
 const int ppr = 50;
 volatile int pulseCountL = 0, pulseCountR = 0;
-volatile int rpmL, rpmR;
+volatile int rpmL, rpmR, rpm;
 
 const float Kp = 1.;
 const float Ki = 1.;
@@ -64,10 +67,7 @@ void calculateRpm()
 {
   rpmL = int(pulseCountL / 0.5 / ppr) * 60;
   rpmR = int(pulseCountR / 0.5 / ppr) * 60;
-  char msg;
-  msg = (char)((rpmL + rpmR) / 2);
-  can_tx_buffer[0] = msg;
-  CAN0.sendMsgBuf(0x00, 0, 1, can_tx_buffer);
+  rpm = (int)((rpmL + rpmR) / 2);
   Serial.print("Left rpm: ");
   Serial.println(rpmL);
   Serial.print("Right rpm: ");
@@ -293,6 +293,12 @@ void setup()
   pinMode(B3, OUTPUT);
   pinMode(B4, OUTPUT);
 
+  pinMode(trig, OUTPUT);
+  pinMode(echo, INPUT);
+
+  unsigned float duration, distance;
+  unsigned int ttc;
+
   attachInterrupt(digitalPinToInterrupt(encoderL), pulseCounterL, RISING);
   attachInterrupt(digitalPinToInterrupt(encoderR), pulseCounterR, RISING);
   //attachInterrupt(digitalPinToInterrupt(encoderL_g), PID_L, RISING);
@@ -312,6 +318,18 @@ void setup()
 //---------------------------------------------
 void loop()
 {    
+    digitalWrite(trig, LOW);
+    delayMicroseconds(2);
+    digitalWrite(trig, HIGH);
+    delayMicroseconds(10);
+    digitalWrite(trig, LOW);
+    duration = pulseIn(echo, HIGH);
+    distance = ((float)(340 * duration) / 10000) / 2;
+    Serial.print("distance : ");
+    Serial.println(distance);
+
+    ttc = (int)(distance / rpm);
+
     CAN0.readMsgBuf(&len, &can_rx_buffer);
     rxId = CAN0.getCanId();
     int msg = (int)can_rx_buffer;

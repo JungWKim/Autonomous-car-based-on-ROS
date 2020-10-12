@@ -36,6 +36,7 @@ int open_port()
     }
 }
 
+#if 0
 int read_port()
 {
     struct can_frame recvFrame;
@@ -70,6 +71,7 @@ int read_port()
         }
     }
 }
+#endif
 
 int write_port()
 {
@@ -97,7 +99,8 @@ int write_port()
             exit(0);
         }
 
-	    sprintf(sendFrame.data, (char)msg.data);
+        unsigned char buffer = 0;
+        sendFrame.data[0] = buffer;
     
         //이후 메시지 큐를 지운다.
         if(msgctl(msqid,IPC_RMID,NULL)==-1)
@@ -127,10 +130,11 @@ int main()
     signal(SIGINT, ctrl_C);
 
     open_port();
+    write_port();
 
-    std::thread t1(read_port);
-    std::thread t2(write_port);
+    //std::thread t1(read_port);
+    //std::thread t2(write_port);
 
-    t1.join();
-    t2.join();
+    //t1.join();
+    //t2.join();
 }
