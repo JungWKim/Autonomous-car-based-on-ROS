@@ -1,7 +1,9 @@
 #include "can.h"
+#include "queue.h"
 
 int soc;
 int read_can_port;
+int msqid;
 
 struct ifreq ifr;
 struct sockaddr_can addr;
@@ -79,35 +81,30 @@ int write_port()
 	struct can_frame sendFrame;
 
     key_t key=54321;
-    int msqid;
-    struct message msg;
+    struct message recv_msg;
 
-    if((msqid = msgget(key, IPC_CREAT|0666)) == -1){
+    if((msqid = msgget(key, IPC_CREAT | 0666)) == -1){
         perror("receiver msgget");
-        exit(0);
+        return 1;
     }
-
 
 	sendFrame.can_id = 0x555;
 	sendFrame.can_dlc = 1;
 
     while(1)
     {
-        if(msgrcv(msqid, &msg, sizeof(int), 0, 0) == -1)
+        if(msgrcv(msqid, &recv_msg, sizeof(int), 1, 0) == -1)
         {
+            if(errno == ENOMSG)
+            {
+                printf("no message\n");
+            }
             perror("queue receive");
-            exit(0);
+            return 1;
         }
 
-        unsigned char buffer = 0;
-        sendFrame.data[0] = buffer;
-    
-        //이후 메시지 큐를 지운다.
-        if(msgctl(msqid,IPC_RMID,NULL)==-1)
-        {
-            perror("msgctl failed");
-            exit(0);
-        }
+        cout << "queue data : " << recv_msg.data << endl;
+        sendFrame.data[0] = (char)recv_msg.data;
 
 	    if (write(soc, &sendFrame, sizeof(struct can_frame)) != sizeof(struct can_frame)) {
     		perror("Write");
@@ -116,18 +113,24 @@ int write_port()
     }
 }
 
-void ctrl_C(int sig)
+void ctrl_c(int sig)
 {
+    //메시지 큐를 지운다.
+    if(msgctl(msqid,IPC_RMID,NULL)==-1)
+    {
+        perror("msgctl failed");
+    }
+
     if(close(soc) < 0)
     {
         perror("CAN Close");
-        exit(0);
     }
+    exit(0);
 }
 
 int main()
 {
-    signal(SIGINT, ctrl_C);
+    signal(SIGINT, ctrl_c);
 
     open_port();
     write_port();

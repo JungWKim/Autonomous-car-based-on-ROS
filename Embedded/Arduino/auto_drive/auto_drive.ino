@@ -59,6 +59,10 @@ volatile float integral_errorL = 0, integral_errorR = 0;
 volatile double PcontrolL, IcontrolL, DcontrolL, PIDcontrolL;
 volatile double PcontrolR, IcontrolR, DcontrolR, PIDcontrolR;
 
+float duration, distance;
+unsigned int ttc;
+
+
 
 //   interrupt function definitions
 //------------------------------------------------
@@ -295,9 +299,6 @@ void setup()
 
   pinMode(trig, OUTPUT);
   pinMode(echo, INPUT);
-
-  unsigned float duration, distance;
-  unsigned int ttc;
 
   attachInterrupt(digitalPinToInterrupt(encoderL), pulseCounterL, RISING);
   attachInterrupt(digitalPinToInterrupt(encoderR), pulseCounterR, RISING);
