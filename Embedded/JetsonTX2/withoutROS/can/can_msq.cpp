@@ -1,4 +1,4 @@
-#include "can_msq.h"
+#include "can.h"
 #include "queue.h"
 
 int soc;
