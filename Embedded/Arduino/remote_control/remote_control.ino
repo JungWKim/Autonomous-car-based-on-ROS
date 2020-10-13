@@ -343,5 +343,4 @@ void loop()
   status_msg.data[3] = rpmR;
   chatter.publish(&status_msg);
   nh.spinOnce();
-  delay(10);
 }
