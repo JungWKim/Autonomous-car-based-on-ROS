@@ -104,10 +104,10 @@ void PID_L()
 {
   int leftTargetRpm = convertSpeed2Rpm(leftTargetSpeed);
   errorL = leftTargetRpm - rpmL;
-  integral_errorL += errorL;
+  integral_errorL += (errorL * 0.004);
   PcontrolL = Kp * errorL;
   IcontrolL = Ki * integral_errorL;
-  DcontrolL = Kd * (errorL - prev_errorL);
+  DcontrolL = (Kd * (errorL - prev_errorL));
   PIDcontrolL = PcontrolL + IcontrolL + DcontrolL;
   vel_L += int((PIDcontrolL * 255) / 1080);
   analogWrite(EA, vel_L);
@@ -119,10 +119,10 @@ void PID_R()
 {
   int rightTargetRpm = convertSpeed2Rpm(rightTargetSpeed);
   errorR = rightTargetRpm - rpmR;
-  integral_errorR += errorR;
+  integral_errorR += (errorR * 0.004);
   PcontrolR = Kp * errorR;
   IcontrolR = Ki * integral_errorR;
-  DcontrolR = Kd * (errorR - prev_errorR);
+  DcontrolR = (Kd * (errorR - prev_errorR));
   PIDcontrolR = PcontrolR + IcontrolR + DcontrolR;
   vel_R += int((PIDcontrolR * 255) / 1080);
   analogWrite(EB, vel_R);
@@ -334,14 +334,11 @@ void setup()
 //---------------------------------------------
 void loop()
 {    
-  PID_L();
-  PID_R();
-
   status_msg.data[0] = vel_L;
   status_msg.data[1] = vel_R;
   status_msg.data[2] = rpmL;
   status_msg.data[3] = rpmR;
   chatter.publish(&status_msg);
   nh.spinOnce();
-  delay(10);
+  delay(100);
 }
