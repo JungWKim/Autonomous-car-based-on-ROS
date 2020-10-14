@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+#include <signal.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -8,8 +9,8 @@
 
 #include "remote_control/teleop_car.h"
  
-#define BUF_SIZE 512
-#define MAX_BUF 32
+#define BUF_SIZE 1
+//#define BUF_SIZE 512
 
 #define FORWARD       1
 #define BACKWARD      2
@@ -20,8 +21,16 @@
 #define STOP          7
 #define SPEEDUP       8
 #define SPEEDDOWN     9
+#define EXIT         10
+#define VOICE_START  11
+#define VOICE_END    12
  
 using namespace std;
+
+void interrupt_handler(int sig)
+{
+    exit(0);
+}
  
 int main(int argc, char*argv[])
 {
@@ -33,6 +42,8 @@ int main(int argc, char*argv[])
     socklen_t len;
     char data;
     char thr;
+
+    signal(SIGINT, interrupt_handler);
 
     ros::init(argc, argv, "android_teleop_car");
     ros::NodeHandle nh;
@@ -94,7 +105,21 @@ int main(int argc, char*argv[])
                 case 'C': msg.data = RIGHTBACKWARD; break;
                 case 'U': msg.data = SPEEDUP;       break;
                 case 'J': msg.data = SPEEDDOWN;     break;
-                //kill switch code//
+                case 'I': msg.data = EXIT;          break;
+                case 'V': msg.data = VOICE_START;         
+                          ROS_INFO("voice control start");
+                          break;
+                case 'B': msg.data = VOICE_END;         
+                          ROS_INFO("voice control end");
+                          break;
+            }
+            if(buffer[0] == 'I')
+            {
+                ROS_INFO("buffer : %c", buffer[0]);
+                memset(buffer, 0x00, sizeof(buffer));
+                close(server_fd);
+                ROS_INFO("Program exiting.....");
+                return 0;
             }
             ros_pub.publish(msg);
             ROS_INFO("buffer : %c", buffer[0]);

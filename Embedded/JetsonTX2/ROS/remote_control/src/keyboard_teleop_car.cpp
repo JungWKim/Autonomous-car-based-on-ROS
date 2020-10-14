@@ -45,13 +45,12 @@ int main(int argc, char **argv)
 				case 'j': msg.data = SPEEDDOWN;     break;
 			}
 
-            if(key != 27)
-            {
+            if(key == 27) break;
+            else {
 			    ros_pub.publish(msg);
 			    ROS_INFO("key input = %c", (char)key);
 			    ROS_INFO("send msg = %d", msg.data);
             }
-            else break;
 		}
 	}
 	msg.data = STOP;
