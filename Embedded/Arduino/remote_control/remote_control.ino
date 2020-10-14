@@ -1,5 +1,5 @@
 #include <ros.h>
-#include <stdio.h>
+#include <math.h>
 #include <std_msgs/Int32MultiArray.h>
 #include <std_msgs/Int32.h>
 #include <MsTimer2.h>
@@ -40,7 +40,7 @@ std_msgs::Int32MultiArray status_msg;
 //------------------------------------------------
 int buf;/*buffer to store previous state*/ 
 int vel_L = 100, vel_R = 100;
-volatile int leftTargetSpeed, rightTargetSpeed;
+volatile int targetRpmL, targetRpmR;
 
 const int ppr = 50;
 volatile int pulseCountL = 0, pulseCountR = 0;
@@ -65,10 +65,19 @@ void calculateRpm()
 {
     rpmL = int(pulseCountL / 0.5 / ppr) * 60;
     rpmR = int(pulseCountR / 0.5 / ppr) * 60;
+
+    if(rpmL != rpmR)
+    {
+        if(rpmL < rpmR) vel_L += 1;
+        else vel_R += 1;
+        speedSetup(rpmL, rpmR);
+    }
+
     Serial.print("Left rpm: ");
     Serial.println(rpmL);
     Serial.print("Right rpm: ");
     Serial.println(rpmR);
+    
     pulseCountL = 0;
     pulseCountR = 0;
 }
@@ -100,36 +109,6 @@ int convertSpeed2Rpm(int input)
 }
 
 
-void PID_L()
-{
-  int leftTargetRpm = convertSpeed2Rpm(leftTargetSpeed);
-  errorL = leftTargetRpm - rpmL;
-  integral_errorL += errorL;
-  PcontrolL = Kp * errorL;
-  IcontrolL = Ki * integral_errorL;
-  DcontrolL = Kd * (errorL - prev_errorL);
-  PIDcontrolL = PcontrolL + IcontrolL + DcontrolL;
-  vel_L += int((PIDcontrolL * 255) / 1080);
-  analogWrite(EA, vel_L);
-  prev_errorL = errorL;
-}
-
-
-void PID_R()
-{
-  int rightTargetRpm = convertSpeed2Rpm(rightTargetSpeed);
-  errorR = rightTargetRpm - rpmR;
-  integral_errorR += errorR;
-  PcontrolR = Kp * errorR;
-  IcontrolR = Ki * integral_errorR;
-  DcontrolR = Kd * (errorR - prev_errorR);
-  PIDcontrolR = PcontrolR + IcontrolR + DcontrolR;
-  vel_R += int((PIDcontrolR * 255) / 1080);
-  analogWrite(EB, vel_R);
-  prev_errorR = errorR;
-}
-
-
 void pulseCounterL()
 {
   pulseCountL++;
@@ -145,8 +124,6 @@ void pulseCounterR()
 //------------------------------------------------
 void speedSetup(int left, int right)
 {
-  leftTargetSpeed = left;
-  rightTargetSpeed = right;
   analogWrite(EA, left);
   analogWrite(EB, right);
 }
@@ -158,10 +135,6 @@ void moveFront(int past_key)
   digitalWrite(A1, LOW);
   digitalWrite(B4, HIGH);
   digitalWrite(B3, LOW);
-  if(past_key == 7)
-  {
-    speedSetup(vel_L+50, vel_R+50);
-  }
   buf = past_key;
 }
 
@@ -172,46 +145,23 @@ void moveBack(int past_key)
   digitalWrite(A1, HIGH);
   digitalWrite(B4, LOW);
   digitalWrite(B3, HIGH);
-
-  if(past_key == 7)
-  {
-    speedSetup(vel_L+50, vel_R+50);
-  }
   buf = past_key;
 }
 
 
-void Forward()
+void vertical_drive()
 {
   speedSetup(vel_L, vel_R);
 }
 
 
-void Backward()
-{
-  speedSetup(vel_L, vel_R);
-}
-
-
-void LeftForward()
+void left_side_drive()
 {
   speedSetup(vel_L, int(vel_R + 80));
 }
 
 
-void RightForward()
-{
-  speedSetup(int(vel_L + 80), vel_R);
-}
-
-
-void LeftBackward()
-{
-  speedSetup(vel_L, int(vel_R + 80));
-}
-
-
-void RightBackward()
+void right_side_drive()
 {
   speedSetup(int(vel_L + 80), vel_R);
 }
@@ -219,10 +169,11 @@ void RightBackward()
 
 void Stop(int past_key)
 {
-  for(int i = 50 ; i > 0 ; i -= 10)
+  int i;
+  for(i = min(vel_L, vel_R) ; i>0 ; i-=10)
   {
       speedSetup(i, i);
-      delay(500);
+      delay(50);
   }   
   buf = past_key;
 }
@@ -276,12 +227,12 @@ void SpeedDown(int past_key)
 //------------------------------------------------
 void messageCb(const std_msgs::Int32& msg) {
   switch(msg.data){
-    case 1: moveFront(msg.data); Forward();       break;
-    case 2: moveBack(msg.data);  Backward();      break;
-    case 3: moveFront(msg.data); LeftForward();   break;
-    case 4: moveFront(msg.data); RightForward();  break;
-    case 5: moveBack(msg.data);  LeftBackward();  break;
-    case 6: moveBack(msg.data);  RightBackward(); break;
+    case 1: moveFront(msg.data); vertical_drive();   break;
+    case 2: moveBack(msg.data);  vertical_drive();   break;
+    case 3: moveFront(msg.data); left_side_drive();  break;
+    case 4: moveFront(msg.data); right_side_drive(); break;
+    case 5: moveBack(msg.data);  left_side_drive();  break;
+    case 6: moveBack(msg.data);  right_side_drive(); break;
     case 7: Stop(msg.data);  break;
     case 8: SpeedUp(buf);    break;
     case 9: SpeedDown(buf);  break;
@@ -316,8 +267,6 @@ void setup()
 
   attachInterrupt(digitalPinToInterrupt(encoderL), pulseCounterL, RISING);
   attachInterrupt(digitalPinToInterrupt(encoderR), pulseCounterR, RISING);
-  //attachInterrupt(digitalPinToInterrupt(encoderL_g), PID_L, RISING);
-  //attachInterrupt(digitalPinToInterrupt(encoderR_g), PID_R, RISING);
    
   MsTimer2::set(500, calculateRpm);
   MsTimer2::start();
@@ -330,9 +279,6 @@ void setup()
 //---------------------------------------------
 void loop()
 {    
-  //PID_L();
-  //PID_R();
-
   status_msg.data[0] = vel_L;
   status_msg.data[1] = vel_R;
   status_msg.data[2] = rpmL;
