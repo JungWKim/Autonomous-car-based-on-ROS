@@ -105,17 +105,17 @@ int main(int argc, char*argv[])
                 case 'C': msg.data = RIGHTBACKWARD; break;
                 case 'U': msg.data = SPEEDUP;       break;
                 case 'J': msg.data = SPEEDDOWN;     break;
-                case 'I': msg.data = EXIT;          break;
-                case 'V': msg.data = VOICE_START;         
-                          ROS_INFO("voice control start");
+                case 'I': msg.data = STOP;          break;
+                case 'V': ROS_INFO("voice control start");
                           break;
-                case 'B': msg.data = VOICE_END;         
-                          ROS_INFO("voice control end");
+                case 'B': ROS_INFO("voice control end");
                           break;
             }
             if(buffer[0] == 'I')
             {
+                ros_pub.publish(msg);
                 ROS_INFO("buffer : %c", buffer[0]);
+                ROS_INFO("send msg : %d", msg.data);
                 memset(buffer, 0x00, sizeof(buffer));
                 close(server_fd);
                 ROS_INFO("Program exiting.....");

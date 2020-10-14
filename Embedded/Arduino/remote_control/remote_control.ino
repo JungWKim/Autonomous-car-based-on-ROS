@@ -133,13 +133,11 @@ void PID_R()
 void pulseCounterL()
 {
   pulseCountL++;
-  PID_L();
 }
 
 void pulseCounterR()
 {
   pulseCountR++;
-  PID_R();
 }
 
 
@@ -163,7 +161,6 @@ void moveFront(int past_key)
   if(past_key == 7)
   {
     speedSetup(vel_L+50, vel_R+50);
-    delay(500);
   }
   buf = past_key;
 }
@@ -179,7 +176,6 @@ void moveBack(int past_key)
   if(past_key == 7)
   {
     speedSetup(vel_L+50, vel_R+50);
-    delay(500);
   }
   buf = past_key;
 }
@@ -223,7 +219,7 @@ void RightBackward()
 
 void Stop(int past_key)
 {
-  for(int i = (vel_L >= vel_R) ? vel_L:vel_R ; i>0 ; i-=10)
+  for(int i = 50 ; i > 0 ; i -= 10)
   {
       speedSetup(i, i);
       delay(500);
