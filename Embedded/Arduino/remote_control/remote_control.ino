@@ -334,8 +334,8 @@ void setup()
 //---------------------------------------------
 void loop()
 {    
-  PID_L();
-  PID_R();
+  //PID_L();
+  //PID_R();
 
   status_msg.data[0] = vel_L;
   status_msg.data[1] = vel_R;
@@ -343,4 +343,5 @@ void loop()
   status_msg.data[3] = rpmR;
   chatter.publish(&status_msg);
   nh.spinOnce();
+  delay(100);
 }
