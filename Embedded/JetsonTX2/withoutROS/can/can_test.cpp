@@ -10,30 +10,36 @@ int open_port()
 {
     /* open socket */
     soc = socket(PF_CAN, SOCK_RAW, CAN_RAW);
+    cout << "soc : " << soc << endl;
     if(soc < 0)
     {
-        perror("Socket");
+        perror("[failed] Socket");
         return (-1);
     }
+    cout << "[success] can socket created" << endl;
 
 	memset(&addr, 0, sizeof(addr));
-    addr.can_family = AF_CAN;
     addr.can_ifindex = ifr.ifr_ifindex;
+    addr.can_family = AF_CAN;
+    cout << "[success] structure initialized" << endl;
 
     strcpy(ifr.ifr_name, "can0");
 
     if (ioctl(soc, SIOCGIFINDEX, &ifr) < 0)
     {
+        perror("[failed] ioctl");
         return (-1);
     }
+    cout << "[success] ioctl initialized" << endl;
 
     fcntl(soc, F_SETFL, O_NONBLOCK);
 
     if (bind(soc, (struct sockaddr *)&addr, sizeof(addr)) < 0)
     {
-		perror("CAN Bind");
+		perror("[failed] CAN Bind");
         return (-1);
     }
+    cout << "[success] can bind" << endl;
 }
 
 #if 0
@@ -61,14 +67,19 @@ int write_port()
 {
     int n;
 	struct can_frame sendFrame;
+    int data = 1;
 
 	sendFrame.can_id = 0x555;
 	sendFrame.can_dlc = 1;
+    sendFrame.data[0] = (char)data;
 
+    cout << "soc : " << soc << endl;
     while(1)
     {
-	    if (write(soc, &sendFrame, sizeof(struct can_frame)) != sizeof(struct can_frame)) {
-    		perror("Write");
+	    if (write(soc, &sendFrame, sizeof(sendFrame))) {
+	    //if (write(soc, &sendFrame, sizeof(struct can_frame)) != sizeof(struct can_frame)) {
+            close(soc);
+    		perror("[failed] Write");
     		return 1;
     	}
     }
@@ -90,7 +101,11 @@ int main()
 
     open_port();
     write_port();
-
+    if(close(soc) < 0)
+    {
+        perror("[failed] can socket close");
+        return 1;
+    }
     //std::thread t1(read_port);
     //std::thread t2(write_port);
 
