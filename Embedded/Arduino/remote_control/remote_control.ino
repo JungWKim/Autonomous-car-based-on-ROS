@@ -38,86 +38,102 @@ std_msgs::Int32MultiArray status_msg;
 
 //   generate variables
 //------------------------------------------------
-int buf;/*buffer to store previous state*/ 
+int past_key;/*buffer to store previous state*/ 
+boolean left_steering, right_steering, dont_move;
 int vel_L = 100, vel_R = 100;
-volatile int targetRpmL, targetRpmR;
 
 const int ppr = 50;
 volatile int pulseCountL = 0, pulseCountR = 0;
 volatile int rpmL, rpmR;
 
-const float Kp = 1.;
-const float Ki = 1.;
-const float Kd = 1.;
+const float Kp = 1.1;
+const float Kd = 1.1;
 
-volatile int errorL, errorR;
-volatile float prev_errorL = 0, prev_errorR = 0;
-volatile float integral_errorL = 0, integral_errorR = 0;
+volatile int errorL, errorR, gapL, gapR;
+volatile float prev_errorR = 0, prev_errorL = 0;
 
-volatile double PcontrolL, IcontrolL, DcontrolL, PIDcontrolL;
-volatile double PcontrolR, IcontrolR, DcontrolR, PIDcontrolR;
+volatile double PcontrolL, DcontrolL, PIDcontrolL;
+volatile double PcontrolR, DcontrolR, PIDcontrolR;
 
 
 //   interrupt function definitions
 //------------------------------------------------
+void speed_limit()
+{
+    if(vel_L > 250) vel_L = 250;
+    else if(vel_L < 50) vel_L = 50;
+        
+    if(vel_R > 250) vel_R = 250;
+    else if(vel_R < 50) vel_R = 50;
+}
 
-void calculateRpm()
+
+void speedCalibration()
 {
     rpmL = int(pulseCountL / 0.5 / ppr) * 60;
     rpmR = int(pulseCountR / 0.5 / ppr) * 60;
 
-    if(rpmL != rpmR)
+    if(!dont_move)
     {
-        if(rpmL < rpmR) vel_L += 1;
-        else vel_R += 1;
-        speedSetup(rpmL, rpmR);
+      if(left_steering)
+      {
+//      errorL = abs(rpmL - rpmR);
+//      if(errorL > 200)      vel_R -= 1;
+//      else if(errorL < 200) vel_R += 1;
+        gapL = rpmR - rpmL;
+        errorL = gapL - 200;
+        PcontrolL = Kp * errorL;
+        DcontrolL = Kd * (errorL - prev_errorL);
+        PIDcontrolL = PcontrolL + DcontrolL;
+        if(gapL > 200)      vel_R += PIDcontrolL;
+        else if(gapL < 200) vel_R -= PIDcontrolL;
+        speed_limit();
+        speedSetup(vel_L, vel_R);
+        prev_errorL = errorL;
+      }
+      else if(right_steering)
+      {
+//      error = abs(rpmL - rpmR);
+//      if(error > 200)      vel_L -= 1;
+//      else if(error < 200) vel_L += 1;
+        gapR = rpmL - rpmR;
+        errorR = gapR - 200;
+        PcontrolR = Kp * errorR;
+        DcontrolR = Kd * (errorR - prev_errorR);
+        PIDcontrolR = PcontrolR + DcontrolR;
+        if(gapR > 200)      vel_L += PIDcontrolR;
+        else if(gapR < 200) vel_L -= PIDcontrolR;
+        speed_limit();
+        speedSetup(vel_L, vel_R);
+        prev_errorR = errorR;
+      }
+      else
+      {
+        if(rpmL != rpmR)
+        {
+          if(rpmL < rpmR) vel_L += 1;
+          else            vel_R += 1;
+          speed_limit();
+          speedSetup(vel_L, vel_R);
+        }
+      }
     }
-
+    
     Serial.print("Left rpm: ");
     Serial.println(rpmL);
     Serial.print("Right rpm: ");
     Serial.println(rpmR);
+    Serial.print("left speed : ");
+    Serial.println(vel_L);
+    Serial.print("right speed : ");
+    Serial.println(vel_R);
     
     pulseCountL = 0;
     pulseCountR = 0;
 }
 
-
-int convertSpeed2Rpm(int input)
-{
-  if(input <= 50)       return 60;
-  else if(input <= 60)  return 240;
-  else if(input <= 70)  return 360;
-  else if(input <= 80)  return 420;
-  else if(input <= 90)  return 540;
-  else if(input <= 100) return 600;
-  else if(input <= 110) return 660;
-  else if(input <= 120) return 720;
-  else if(input <= 130) return 780;
-  else if(input <= 140) return 780;
-  else if(input <= 150) return 840;
-  else if(input <= 160) return 840;
-  else if(input <= 170) return 900;
-  else if(input <= 180) return 900;
-  else if(input <= 190) return 900;
-  else if(input <= 200) return 960;
-  else if(input <= 210) return 960;
-  else if(input <= 220) return 960;
-  else if(input <= 230) return 1020;
-  else if(input <= 240) return 1020;
-  else                  return 1080;
-}
-
-
-void pulseCounterL()
-{
-  pulseCountL++;
-}
-
-void pulseCounterR()
-{
-  pulseCountR++;
-}
+void pulseCounterL() { pulseCountL++; }
+void pulseCounterR() { pulseCountR++; }
 
 
 //   function definitions
@@ -129,97 +145,102 @@ void speedSetup(int left, int right)
 }
 
 //direction set to move forward
-void moveFront(int past_key)
+void moveFront()
 {
   digitalWrite(A2, HIGH);
   digitalWrite(A1, LOW);
   digitalWrite(B4, HIGH);
   digitalWrite(B3, LOW);
-  buf = past_key;
 }
 
 //direction set to move backward
-void moveBack(int past_key)
+void moveBack()
 {
   digitalWrite(A2, LOW);
   digitalWrite(A1, HIGH);
   digitalWrite(B4, LOW);
   digitalWrite(B3, HIGH);
-  buf = past_key;
 }
 
 
-void vertical_drive()
+void vertical_drive(int current_key)
 {
-  speedSetup(vel_L, vel_R);
-}
-
-
-void left_side_drive()
-{
-  speedSetup(vel_L, int(vel_R + 80));
-}
-
-
-void right_side_drive()
-{
-  speedSetup(int(vel_L + 80), vel_R);
-}
-
-
-void Stop(int past_key)
-{
-  int i;
-  for(i = min(vel_L, vel_R) ; i>0 ; i-=10)
+  if(past_key != current_key)
   {
-      speedSetup(i, i);
-      delay(50);
-  }   
-  buf = past_key;
+    dont_move = false;
+    left_steering = false;
+    right_steering = false;
+    vel_L = 100;
+    vel_R = 100;
+    speedSetup(vel_L, vel_R);
+  }
+}
+
+
+void left_side_drive(int current_key)
+{
+  if(past_key != current_key)
+  {
+    dont_move = false;
+    left_steering = true;
+    right_steering = false;
+    vel_L = 100;
+    vel_R = 180;
+    speedSetup(vel_L ,vel_R);
+  }
+}
+
+
+void right_side_drive(int current_key)
+{
+  if(past_key != current_key)
+  {
+    dont_move = false;
+    left_steering = false;
+    right_steering = true;
+    vel_L = 180;
+    vel_R = 100;
+    speedSetup(vel_L, vel_R);
+  }
+}
+
+
+void Stop(int current_key)
+{
+  if(past_key != current_key)
+  {
+    int i;
+    dont_move = true;
+    left_steering = false;
+    right_steering = false;
+    for(i = min(vel_L, vel_R) ; i>0 ; i-=10)
+    {
+        speedSetup(i, i);
+        delay(50);
+    }  
+  } 
 }
 
 
 //to keep the car's moving direction, get the previous driving method as a parameter
-void SpeedUp(int past_key)
+void SpeedUp(int current_key)
 {
   vel_L += 10;
   vel_R += 10;
 
-  if(vel_L > 250) vel_L = 250;
-  if(vel_R > 250) vel_R = 250;
-  
-  switch(past_key)
-  {
-    case 1:
-    case 2: speedSetup(vel_L, vel_R); break;
-    case 3:
-    case 4: speedSetup(vel_L, int(vel_R + 80)); break;
-    case 5:
-    case 6: speedSetup(int(vel_L + 80), vel_R); break;
-    case 7: speedSetup(0, 0); break;
-  }
+  speed_limit();
+  speedSetup(vel_L, vel_R);
 }
 
 
 //to keep the car's moving direction, get the previous driving method as a parameter
-void SpeedDown(int past_key)
+void SpeedDown(int current_key)
 {
   vel_L -= 10;
   vel_R -= 10;
 
-  if(vel_L < 40) vel_L = 40;
-  if(vel_R < 40) vel_R = 40;
-  
-  switch(past_key)
-  {
-    case 1:
-    case 2: speedSetup(vel_L, vel_R); break;
-    case 3:
-    case 4: speedSetup(vel_L, int(vel_R + 80)); break;
-    case 5:
-    case 6: speedSetup(int(vel_L + 80), vel_R); break;
-    case 7: speedSetup(0, 0); break;
-  }
+  speed_limit();
+  speedSetup(vel_L, vel_R);
 }
 
 
@@ -227,16 +248,16 @@ void SpeedDown(int past_key)
 //------------------------------------------------
 void messageCb(const std_msgs::Int32& msg) {
   switch(msg.data){
-    case 1: moveFront(msg.data); vertical_drive();   break;
-    case 2: moveBack(msg.data);  vertical_drive();   break;
-    case 3: moveFront(msg.data); left_side_drive();  break;
-    case 4: moveFront(msg.data); right_side_drive(); break;
-    case 5: moveBack(msg.data);  left_side_drive();  break;
-    case 6: moveBack(msg.data);  right_side_drive(); break;
-    case 7: Stop(msg.data);  break;
-    case 8: SpeedUp(buf);    break;
-    case 9: SpeedDown(buf);  break;
-  }
+    case 1: moveFront(); vertical_drive(msg.data);   break;
+    case 2: moveBack();  vertical_drive(msg.data);   break;
+    case 3: moveFront(); left_side_drive(msg.data);  break;
+    case 4: moveFront(); right_side_drive(msg.data); break;
+    case 5: moveBack();  left_side_drive(msg.data);  break;
+    case 6: moveBack();  right_side_drive(msg.data); break;
+    case 7: Stop(msg.data);       break;
+    case 8: SpeedUp(msg.data);    break;
+    case 9: SpeedDown(msg.data);  break;
+  } past_key = msg.data;
 }
 
 
@@ -268,7 +289,7 @@ void setup()
   attachInterrupt(digitalPinToInterrupt(encoderL), pulseCounterL, RISING);
   attachInterrupt(digitalPinToInterrupt(encoderR), pulseCounterR, RISING);
    
-  MsTimer2::set(500, calculateRpm);
+  MsTimer2::set(200, speedCalibration);
   MsTimer2::start();
   Serial.begin(57600);
   speedSetup(0, 0);//initial speed >> 0
