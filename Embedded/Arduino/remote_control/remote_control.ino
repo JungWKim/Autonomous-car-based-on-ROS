@@ -147,25 +147,25 @@ void speedSetup(int left, int right)
 //direction set to move forward
 void moveFront()
 {
-  digitalWrite(A2, HIGH);
-  digitalWrite(A1, LOW);
-  digitalWrite(B4, HIGH);
-  digitalWrite(B3, LOW);
-}
-
-//direction set to move backward
-void moveBack()
-{
   digitalWrite(A2, LOW);
   digitalWrite(A1, HIGH);
   digitalWrite(B4, LOW);
   digitalWrite(B3, HIGH);
 }
 
+//direction set to move backward
+void moveBack()
+{
+  digitalWrite(A2, HIGH);
+  digitalWrite(A1, LOW);
+  digitalWrite(B4, HIGH);
+  digitalWrite(B3, LOW);
+}
+
 
 void vertical_drive(int current_key)
 {
-  if(past_key != current_key)
+  if((past_key != 1) && (past_key != 2))
   {
     dont_move = false;
     left_steering = false;
@@ -248,16 +248,16 @@ void SpeedDown(int current_key)
 //------------------------------------------------
 void messageCb(const std_msgs::Int32& msg) {
   switch(msg.data){
-    case 1: moveFront(); vertical_drive(msg.data);   break;
-    case 2: moveBack();  vertical_drive(msg.data);   break;
-    case 3: moveFront(); left_side_drive(msg.data);  break;
-    case 4: moveFront(); right_side_drive(msg.data); break;
-    case 5: moveBack();  left_side_drive(msg.data);  break;
-    case 6: moveBack();  right_side_drive(msg.data); break;
-    case 7: Stop(msg.data);       break;
+    case 1: moveFront(); vertical_drive(msg.data);   past_key = msg.data; break;
+    case 2: moveBack();  vertical_drive(msg.data);   past_key = msg.data; break;
+    case 3: moveFront(); left_side_drive(msg.data);  past_key = msg.data; break;
+    case 4: moveFront(); right_side_drive(msg.data); past_key = msg.data; break;
+    case 5: moveBack();  left_side_drive(msg.data);  past_key = msg.data; break;
+    case 6: moveBack();  right_side_drive(msg.data); past_key = msg.data; break;
+    case 7: Stop(msg.data);       past_key = msg.data; break;
     case 8: SpeedUp(msg.data);    break;
     case 9: SpeedDown(msg.data);  break;
-  } past_key = msg.data;
+  } 
 }
 
 
