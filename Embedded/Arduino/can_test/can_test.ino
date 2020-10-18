@@ -1,13 +1,13 @@
 #include <mcp_can.h>
 #include <SPI.h>
 
-#define INT 53
+#define INT 12
 
 long unsigned int rxId;
 unsigned char len = 0;
 unsigned char rxBuf[1];
 
-MCP_CAN CAN(45);                               // Set CS to pin 10
+MCP_CAN CAN(8);                               // Set CS to pin 10
 
 void setup()
 {
