@@ -27,7 +27,7 @@ int open_port()
     }
     cout << "[success] ioctl initialized" << endl;
 
-	//memset(&addr, 0, sizeof(addr));
+	memset(&addr, 0, sizeof(addr));
     addr.can_family = AF_CAN;
     addr.can_ifindex = ifr.ifr_ifindex;
     cout << "[success] structure initialized" << endl;
@@ -67,16 +67,18 @@ int write_port()
 {
     int n;
 	struct can_frame sendFrame;
-    int data = 1;
+    char data = 'a';
 
 	sendFrame.can_id = 0x555;
 	sendFrame.can_dlc = 1;
-    sendFrame.data[0] = (char)data;
+    for(int i = 0; i<8; i++)
+        sendFrame.data[i] = data;
 
     cout << "sending data...." << endl;
     while(1)
     {
-	    if ((n = write(soc, &sendFrame, sizeof(sendFrame))) < 0) {
+	    if ((n = sendto(soc, &sendFrame, sizeof(sendFrame), 0, (struct sockaddr *)&addr, sizeof(addr))) < 0) {
+	    //if ((n = write(soc, &sendFrame, sizeof(sendFrame))) < 0) {
 	    //if (write(soc, &sendFrame, sizeof(struct can_frame)) != sizeof(struct can_frame)) {
     		perror("[failed] Write");
     		return 1;
