@@ -1,7 +1,7 @@
 #!/bin/bash
 
 all:
-	g++ -o serial serial.cpp main.cpp
+	gcc -o serial serial.c main.c -lpthread
 
 clean:
 	rm serial
