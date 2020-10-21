@@ -4,9 +4,15 @@
 int soc;
 int read_can_port;
 int msqid;
+int n;
 
 struct ifreq ifr;
 struct sockaddr_can addr;
+
+struct can_frame sendFrame;
+
+key_t key = 54321;
+struct message recv_msg;
 
 int open_port()
 {
@@ -77,33 +83,28 @@ int read_port()
 
 int write_port()
 {
-    int n;
-	struct can_frame sendFrame;
-
-    key_t key=54321;
-    struct message recv_msg;
+	sendFrame.can_id = 0x555;
+	sendFrame.can_dlc = 1;
 
     if((msqid = msgget(key, IPC_CREAT | 0666)) == -1){
         perror("receiver msgget");
         return 1;
     }
 
-	sendFrame.can_id = 0x555;
-	sendFrame.can_dlc = 1;
-
     while(1)
     {
-        if(msgrcv(msqid, &recv_msg, sizeof(int), 1, 0) == -1)
+        if(msgrcv(msqid, &recv_msg, sizeof(struct message), 1, 0) == -1)
         {
             if(errno == ENOMSG)
             {
                 printf("no message\n");
+                break;
             }
             perror("queue receive");
             return 1;
         }
-
-        cout << "queue data : " << recv_msg.data << endl;
+        cout << "queue left_or_right data : " << recv_msg.left_or_right << endl;
+        cout << "queue control data : " << recv_msg.control << endl;
         sendFrame.data[0] = (char)recv_msg.data;
 
 	    if (write(soc, &sendFrame, sizeof(struct can_frame)) != sizeof(struct can_frame)) {
