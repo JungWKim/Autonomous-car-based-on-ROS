@@ -15,7 +15,7 @@ public class SplashActivity extends Activity {
             e.printStackTrace();
         }
         //스플래쉬 액티비티가 종료된 후 메인액티비티를 보여주는 부분
-        startActivity(new Intent(this, MainActivity.class));
+        startActivity(new Intent(this, GetIp.class));
         finish();
     }
 }

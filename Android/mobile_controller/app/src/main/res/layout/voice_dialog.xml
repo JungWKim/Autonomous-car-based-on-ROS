@@ -7,7 +7,7 @@
 
     <TextView
         android:id="@+id/voice_text"
-        android:text="blanked"
+        android:text="음성인식 동작중입니다"
         android:textSize="25dp"
         android:layout_gravity="center"
         android:layout_height="match_parent"
