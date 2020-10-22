@@ -1,5 +1,5 @@
-int left_or_right;
-int control;
+char left_or_right;
+int rxdata;
 
 void setup()
 {
@@ -8,15 +8,16 @@ void setup()
 
 void loop()
 {
-  if(Serial.available() > 0)
+
+}
+
+void serialEvent()
+{
+  while(Serial.available() > 0)
   {
-      if((recvBuffer = Serial.read()))
-      {
-          //Serial.print("received data : ");
-          Serial.print(sendBuffer[0]);
-          //Serial.print(
-          //Serial.write(sendBuffer[1]);
-          //Serial.write(sendBuffer[);
-      }
+    left_or_right = Serial.read();
+    rxdata = (signed int)left_or_right;
+    Serial.print("pid : ");
+    Serial.println(rxdata);
   }
 }
