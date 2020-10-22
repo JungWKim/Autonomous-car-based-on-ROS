@@ -296,7 +296,7 @@ void setup()
 }
 
 
-//   Publish received data from Raspberry pi
+//   Publish received data from Jetson TX2
 //---------------------------------------------
 void loop()
 {    
