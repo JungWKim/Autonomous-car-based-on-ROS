@@ -20,7 +20,8 @@ int main()
     signal(SIGINT, interrupt_handler);
     
     msg.msg_type = 1;
-    msg.data = 1;
+    msg.left_or_right = 1;
+    msg.data = 255;
     if((msqid = msgget(key, IPC_CREAT | 0666)) == -1)
     {
         perror("transmitter mssget");
@@ -29,7 +30,7 @@ int main()
 
     while(1)
     {
-        if(msgsnd(msqid, &msg, sizeof(int), 0) == -1)
+        if(msgsnd(msqid, &msg, sizeof(struct message), 0) == -1)
         {
             perror("queue send error");
             return 1;

@@ -1,37 +1,26 @@
 #include "serial.h" 
 
 int fd; // 시리얼포트 파일핸들
-int recvBuffer;
-int sendBuffer=101;
+int left_or_right = 1;
+int control = 255;
 int rdcnt; 
 
 void write_port()
 {
     while(1)
     {
-        // 데이타를 읽어온다.
-        if((rdcnt = write( fd, &sendBuffer, sizeof(sendBuffer))) < 0)
+        if((rdcnt = write( fd, &left_or_right, sizeof(int))) < 0)
         {
-            perror("[failed] write");
+            perror("[failed] write left_or_right");
             exit(1);
         }
-        printf("send data : %d\n", sendBuffer);
-        sleep(1);
-    }
-
-}
-
-void read_port()
-{
-    while(1)
-    {
-        // 데이타를 읽어온다.
-        if((rdcnt = read(fd, &recvBuffer, sizeof(recvBuffer))) < 0)
+        if((rdcnt = write( fd, &control, sizeof(int))) < 0)
         {
-            perror("[failed] read");
+            perror("[failed] write control");
             exit(1);
         }
-        printf("read data : %d\n", recvBuffer);
+        printf("send left_or_right data : %d\n", left_or_right);
+        printf("send control data : %d\n", control);
         sleep(1);
     }
 
@@ -72,23 +61,10 @@ int main(int argc, char **argv) {
     }
     printf("open serial socket\n");
 
-    thread_id = pthread_create(&p_thread[0], NULL, write_port, (void *)p1);
-    if (thread_id < 0)
+    while(1)
     {
-        perror("thread create error : ");
-        exit(0);
+        write_port();
     }
-
-    // ② 2번 쓰레드 생성
-    thread_id = pthread_create(&p_thread[1], NULL, read_port, (void *)p2);
-    if (thread_id < 0)
-    {
-        perror("thread create error : ");
-        exit(0);
-    }
-
-    pthread_join(p_thread[0], (void **)&status);
-    pthread_join(p_thread[1], (void **)&status);
 
     // 시리얼 포트를 닫는다.
     close_serial( fd );

@@ -28,7 +28,7 @@ int main()
 
     while(1)
     {
-        if(msgrcv(msqid, &recv_msg, sizeof(recv_msg.data), 1, 0) == -1)
+        if(msgrcv(msqid, &recv_msg, sizeof(struct message), 1, 0) == -1)
         {
             if(errno == ENOMSG)
             {
@@ -38,8 +38,8 @@ int main()
             perror("queue receive error");
             return 1;
         }
-
-        cout << "received message : " << recv_msg.data << endl;
+        cout << "left_or_right : " << recv_msg.left_or_right << endl;
+        cout << "data : " << recv_msg.data << endl;
         sleep(1);
     }
     return 0;

@@ -205,7 +205,7 @@ void right_side_drive(int current_key)
 }
 
 
-void Stop(int current_key)
+void stop(int current_key)
 {
   if(past_key != current_key)
   {
@@ -223,7 +223,7 @@ void Stop(int current_key)
 
 
 //to keep the car's moving direction, get the previous driving method as a parameter
-void SpeedUp(int current_key)
+void speedUp(int current_key)
 {
   vel_L += 10;
   vel_R += 10;
@@ -234,7 +234,7 @@ void SpeedUp(int current_key)
 
 
 //to keep the car's moving direction, get the previous driving method as a parameter
-void SpeedDown(int current_key)
+void speedDown(int current_key)
 {
   vel_L -= 10;
   vel_R -= 10;
@@ -254,9 +254,9 @@ void messageCb(const std_msgs::Int32& msg) {
     case 4: moveFront(); right_side_drive(msg.data); past_key = msg.data; break;
     case 5: moveBack();  left_side_drive(msg.data);  past_key = msg.data; break;
     case 6: moveBack();  right_side_drive(msg.data); past_key = msg.data; break;
-    case 7: Stop(msg.data);       past_key = msg.data; break;
-    case 8: SpeedUp(msg.data);    break;
-    case 9: SpeedDown(msg.data);  break;
+    case 7: stop(msg.data);       past_key = msg.data; break;
+    case 8: speedUp(msg.data);    break;
+    case 9: speedDown(msg.data);  break;
   } 
 }
 
