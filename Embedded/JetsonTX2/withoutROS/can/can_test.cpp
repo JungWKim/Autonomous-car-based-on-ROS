@@ -67,12 +67,12 @@ int write_port()
 {
     int n;
 	struct can_frame sendFrame;
-    char data = 'a';
+    int data = -70;
 
 	sendFrame.can_id = 0x555;
 	sendFrame.can_dlc = 1;
-    for(int i = 0; i<8; i++)
-        sendFrame.data[i] = data;
+    for(int i = 0; i<1; i++)
+        sendFrame.data[i] = (char)data;
 
     cout << "sending data...." << endl;
     while(1)
