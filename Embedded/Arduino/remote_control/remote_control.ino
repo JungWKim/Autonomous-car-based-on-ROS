@@ -30,6 +30,9 @@
 #define B4   9
 #define EB   8
 
+#define trig 37
+#define echo 33
+
 //   Basic declaration to use rosserial
 //------------------------------------------------
 ros::NodeHandle  nh;
@@ -44,16 +47,19 @@ int vel_L = 100, vel_R = 100;
 
 const int ppr = 50;
 volatile int pulseCountL = 0, pulseCountR = 0;
-volatile int rpmL, rpmR;
+volatile int rpmL, rpmR, rpm;
 
 const float Kp = 1.1;
 const float Kd = 1.1;
 
-volatile int errorL, errorR, gapL, gapR;
+volatile int errorL, errorR, speed_gapL, speed_gapR;
+volatile int target_gap = 200;
 volatile float prev_errorR = 0, prev_errorL = 0;
 
 volatile double PcontrolL, DcontrolL, PIDcontrolL;
 volatile double PcontrolR, DcontrolR, PIDcontrolR;
+
+float reflect_duration, obstacle_distance, velocity, ttc;
 
 
 //   interrupt function definitions
@@ -77,32 +83,26 @@ void speedCalibration()
     {
       if(left_steering)
       {
-//      errorL = abs(rpmL - rpmR);
-//      if(errorL > 200)      vel_R -= 1;
-//      else if(errorL < 200) vel_R += 1;
-        gapL = rpmR - rpmL;
-        errorL = gapL - 200;
+        speed_gapL = rpmR - rpmL;
+        errorL = speed_gapL - target_gap;
         PcontrolL = Kp * errorL;
         DcontrolL = Kd * (errorL - prev_errorL);
         PIDcontrolL = PcontrolL + DcontrolL;
-        if(gapL > 200)      vel_R += PIDcontrolL;
-        else if(gapL < 200) vel_R -= PIDcontrolL;
+        if(speed_gapL > 200)      vel_R += PIDcontrolL;
+        else if(speed_gapL < 200) vel_R -= PIDcontrolL;
         speed_limit();
         speedSetup(vel_L, vel_R);
         prev_errorL = errorL;
       }
       else if(right_steering)
       {
-//      error = abs(rpmL - rpmR);
-//      if(error > 200)      vel_L -= 1;
-//      else if(error < 200) vel_L += 1;
-        gapR = rpmL - rpmR;
-        errorR = gapR - 200;
+        speed_gapR = rpmL - rpmR;
+        errorR = speed_gapR - target_gap;
         PcontrolR = Kp * errorR;
         DcontrolR = Kd * (errorR - prev_errorR);
         PIDcontrolR = PcontrolR + DcontrolR;
-        if(gapR > 200)      vel_L += PIDcontrolR;
-        else if(gapR < 200) vel_L -= PIDcontrolR;
+        if(speed_gapR > 200)      vel_L += PIDcontrolR;
+        else if(speed_gapR < 200) vel_L -= PIDcontrolR;
         speed_limit();
         speedSetup(vel_L, vel_R);
         prev_errorR = errorR;
@@ -286,6 +286,9 @@ void setup()
   pinMode(B3, OUTPUT);
   pinMode(B4, OUTPUT);
 
+  pinMode(trig, OUTPUT);
+  pinMode(echo, INPUT);
+
   attachInterrupt(digitalPinToInterrupt(encoderL), pulseCounterL, RISING);
   attachInterrupt(digitalPinToInterrupt(encoderR), pulseCounterR, RISING);
    
@@ -299,7 +302,7 @@ void setup()
 //   Publish received data from Jetson TX2
 //---------------------------------------------
 void loop()
-{    
+{      
   status_msg.data[0] = vel_L;
   status_msg.data[1] = vel_R;
   status_msg.data[2] = rpmL;

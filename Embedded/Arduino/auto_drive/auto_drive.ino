@@ -41,9 +41,11 @@ volatile int pulseCountL = 0, pulseCountR = 0;
 volatile int rpmL, rpmR;
 
 volatile const float Kp = 1.1;
+volatile const float Kd = 1.1;
 
 volatile int error, speed_gap;
-volatile double Pcontrol, PIDcontrol;
+volatile float prev_error = 0;
+volatile double Pcontrol, Dcontrol, PIDcontrol;
 
 float reflect_duration, obstacle_distance, velocity, ttc, rpm;
 short serial_lock = 0;
@@ -71,7 +73,9 @@ void speedCalibration()
     speed_gap = rpmR - rpmL;
     error = speed_gap - target_gap;
     Pcontrol = Kp * error;
-    PIDcontrol = Pcontrol;
+    Dcontrol = Kd * (error - prev_error);
+    PIDcontrol = Pcontrol + Dcontrol;
+    prev_error = error;
     if(speed_gap > target_gap)      vel_R += PIDcontrol;
     else if(speed_gap < target_gap) vel_R -= PIDcontrol;
     speed_limit();
@@ -82,7 +86,9 @@ void speedCalibration()
     speed_gap = rpmL - rpmR;
     error = speed_gap - target_gap;
     Pcontrol = Kp * error;
-    PIDcontrol = Pcontrol;
+    Dcontrol = Kd * (error - prev_error);
+    PIDcontrol = Pcontrol + Dcontrol;
+    prev_error = error;
     if(speed_gap > target_gap)      vel_L += PIDcontrol;
     else if(speed_gap < target_gap) vel_L -= PIDcontrol;
     speed_limit();
@@ -99,14 +105,14 @@ void speedCalibration()
     }
   }
 
-  Serial.print("Left rpm: ");
-  Serial.println(rpmL);
-  Serial.print("Right rpm: ");
-  Serial.println(rpmR);
-  Serial.print("left speed : ");
-  Serial.println(vel_L);
-  Serial.print("right speed : ");
-  Serial.println(vel_R);
+//  Serial.print("Left rpm: ");
+//  Serial.println(rpmL);
+//  Serial.print("Right rpm: ");
+//  Serial.println(rpmR);
+//  Serial.print("left speed : ");
+//  Serial.println(vel_L);
+//  Serial.print("right speed : ");
+//  Serial.println(vel_R);
     
   pulseCountL = 0;
   pulseCountR = 0;
@@ -174,12 +180,16 @@ void loop()
   delayMicroseconds(10);
   digitalWrite(trig, LOW);
   reflect_duration = pulseIn(echo, HIGH);
-  obstacle_distance = float(340 * reflect_duration) / 5000;
+  obstacle_distance = ((float)(340 * reflect_duration) / 10000) / 2;
   rpm = (rpmL + rpmR) / 2;
   velocity = (rpm * 6.6 * 3.141592) / 60;
-  ttc = (obstacle_distance / velocity) - 1;// 1 is system delay
+  ttc = (obstacle_distance / velocity) - 1.0;// 1 is system delay
+  if(velocity <= 0) ttc = 0;
+  if(ttc < 0) ttc = 0;
   Serial.print("distance : ");
   Serial.println(obstacle_distance);
+  Serial.print("velocity : ");
+  Serial.println(velocity);
   Serial.print("ttc : ");
   Serial.println(ttc);
 
