@@ -18,7 +18,7 @@ int open_port()
     }
     cout << "[success] can socket created" << endl;
 
-    strcpy(ifr.ifr_name, "can0");
+    strcpy(ifr.ifr_name, "can1");
 
     if (ioctl(soc, SIOCGIFINDEX, &ifr) < 0)
     {
@@ -42,11 +42,11 @@ int open_port()
     cout << "[success] can bind" << endl;
 }
 
-#if 0
 int read_port()
 {
     struct can_frame recvFrame;
     int recv_bytes = 0;
+    int buffer;
 
     while(1)
     {
@@ -57,32 +57,9 @@ int read_port()
 	    }
        	for (int i = 0; i < recvFrame.can_dlc; i++)
         {
-		    printf("message from arduino : %c", recvFrame.data[i]);
+            buffer = (signed int)recvFrame.data[i];
+		    printf("message from arduino : %d\n", buffer);
         }
-    }
-}
-#endif
-
-int write_port()
-{
-    int n;
-	struct can_frame sendFrame;
-    int data = -70;
-
-	sendFrame.can_id = 0x555;
-	sendFrame.can_dlc = 1;
-    for(int i = 0; i<1; i++)
-        sendFrame.data[i] = (char)data;
-
-    cout << "sending data...." << endl;
-    while(1)
-    {
-	    if ((n = sendto(soc, &sendFrame, sizeof(sendFrame), 0, (struct sockaddr *)&addr, sizeof(addr))) < 0) {
-	    //if ((n = write(soc, &sendFrame, sizeof(sendFrame))) < 0) {
-	    //if (write(soc, &sendFrame, sizeof(struct can_frame)) != sizeof(struct can_frame)) {
-    		perror("[failed] Write");
-    		return 1;
-    	}
     }
 }
 
@@ -95,7 +72,7 @@ int main()
 {
     signal(SIGINT, ctrl_c);
     open_port();
-    write_port();
+    read_port();
     if(close(soc) < 0)
     {
         perror("[failed] can socket close");
