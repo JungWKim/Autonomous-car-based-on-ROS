@@ -50,8 +50,8 @@ int write_port()
 
 	sendFrame.can_id = 0x555;
 	sendFrame.can_dlc = 1;
-    for(int i = 0; i<1; i++)
-        sendFrame.data[i] = (char)data;
+    for(int i = 0; i<4; i++)
+        sendFrame.data[i] = 'a';
 
     cout << "sending data...." << endl;
     while(1)
