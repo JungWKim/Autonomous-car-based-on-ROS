@@ -1,10 +1,9 @@
+// Copyright (c) Sandeep Mistry. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
 #include <CAN.h>
 
-//#define INT 18
-//#define  CS 53
-
-void setup()
-{
+void setup() {
   Serial.begin(9600);
   while (!Serial);
 
@@ -15,11 +14,10 @@ void setup()
     Serial.println("Starting CAN failed!");
     while (1);
   }
-  Serial.println("CAN initialized");
 }
 
-void loop()
-{
+void loop() {
+  // try to parse packet
   int packetSize = CAN.parsePacket();
 
   if (packetSize) {

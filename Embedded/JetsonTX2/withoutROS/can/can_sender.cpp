@@ -51,7 +51,7 @@ int write_port()
 	sendFrame.can_id = 0x555;
 	sendFrame.can_dlc = 1;
     for(int i = 0; i<1; i++)
-        sendFrame.data[i] = data;
+        sendFrame.data[i] = (char)data;
 
     cout << "sending data...." << endl;
     while(1)
@@ -81,9 +81,4 @@ int main()
         perror("[failed] can socket close");
         return 1;
     }
-    //std::thread t1(read_port);
-    //std::thread t2(write_port);
-
-    //t1.join();
-    //t2.join();
 }
