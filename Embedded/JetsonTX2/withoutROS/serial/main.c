@@ -2,7 +2,6 @@
 
 int fd; // 시리얼포트 파일핸들
 char control;
-char message[4];
 int rdcnt; 
 
 void write_port()
