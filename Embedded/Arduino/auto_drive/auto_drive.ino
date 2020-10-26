@@ -16,12 +16,12 @@
 //  Assigning pin numbers
 //------------------------------------------------
 
-#define encoderL    4
-#define encoderL_g  3
+#define encoderL   18
+#define encoderL_g 19
 #define encoderR   21
 #define encoderR_g 20
 
-#define EA  13
+#define EA  6
 #define A1  12
 #define A2  11
 
@@ -49,7 +49,7 @@ volatile float prev_error = 0;
 volatile double Pcontrol, Dcontrol, PIDcontrol;
 
 float reflect_duration, obstacle_distance, velocity, ttc, rpm;
-short serial_lock = 0;
+short can_lock = 0;
 int target_gap;
 char rxBuffer;
 
@@ -204,49 +204,52 @@ void loop()
 
   if(ttc <= 2)
   {
-    serial_lock = 1;
+    can_lock = 1;
     speedSetup(0, 0);
   }
   else if(ttc <= 3)
   {
-    serial_lock = 0;
+    can_lock = 0;
     speedSetup(vel_L - 50, vel_R - 50);
   }
   else if(ttc <= 4)
   {
-    serial_lock = 0;
+    can_lock = 0;
     speedSetup(vel_L - 30, vel_R - 30);
   }
   else
   {
-    serial_lock = 0;
+    can_lock = 0;
     speedSetup(vel_L, vel_R);
   }
 
-  if(CAN.parsePacket())
+  if(!can_lock)
   {
-    if(CAN.available())
+    if(CAN.parsePacket())
     {
-      rxBuffer = CAN.read();
-      target_gap = (signed int)rxBuffer;
-      Serial.print("auto command : ");
-      Serial.println(target_gap);
-      if(target_gap > 0)
+      if(CAN.available())
       {
-          left_steering = true;
-          right_steering = false;
-      }
-      else if(target_gap < 0)
-      {
-          left_steering = false;
-          right_steering = true;
-      }
-      else
-      {
-          left_steering = false;
-          right_steering = false;
-          vel_L = 100;
-          vel_R = 100;
+        rxBuffer = CAN.read();
+        target_gap = (signed int)rxBuffer;
+        Serial.print("auto command : ");
+        Serial.println(target_gap);
+        if(target_gap > 0)
+        {
+            left_steering = true;
+            right_steering = false;
+        }
+        else if(target_gap < 0)
+        {
+            left_steering = false;
+            right_steering = true;
+        }
+        else
+        {
+            left_steering = false;
+            right_steering = false;
+            vel_L = 100;
+            vel_R = 100;
+        }
       }
     }
   }

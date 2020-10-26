@@ -14,11 +14,6 @@ void setup()
 
 void loop()
 {
-
-}
-
-void serialEvent()
-{
     while(Serial.available() > 0)
     {
         if(rxBuffer = Serial.read())
@@ -32,4 +27,9 @@ void serialEvent()
           Serial.println((signed int)rxBuffer);
         }
     }
+}
+
+void serialEvent()
+{
+
 }
