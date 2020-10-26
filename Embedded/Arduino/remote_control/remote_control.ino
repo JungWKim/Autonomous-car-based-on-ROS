@@ -22,11 +22,11 @@
 #define encoderR   21
 #define encoderR_g 20
 
-#define EA  13
+#define EA  6
 #define A1  12
 #define A2  11
 
-#define B3  10
+#define B3   7
 #define B4   9
 #define EB   8
 
@@ -205,7 +205,7 @@ void right_side_drive(int current_key)
 }
 
 
-void stop(int current_key)
+void stop_motor(int current_key)
 {
   if(past_key != current_key)
   {
@@ -254,7 +254,7 @@ void messageCb(const std_msgs::Int32& msg) {
     case 4: moveFront(); right_side_drive(msg.data); past_key = msg.data; break;
     case 5: moveBack();  left_side_drive(msg.data);  past_key = msg.data; break;
     case 6: moveBack();  right_side_drive(msg.data); past_key = msg.data; break;
-    case 7: stop(msg.data);       past_key = msg.data; break;
+    case 7: stop_motor(msg.data); past_key = msg.data; break;
     case 8: speedUp(msg.data);    break;
     case 9: speedDown(msg.data);  break;
   } 
