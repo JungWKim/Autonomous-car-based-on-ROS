@@ -1,6 +1,7 @@
 #include <math.h>
 #include <MsTimer2.h>
 #include <SPI.h>
+#include <CAN.h>
 
 /*----------------
  * How to control motor
@@ -15,7 +16,7 @@
 //  Assigning pin numbers
 //------------------------------------------------
 
-#define encoderL    2
+#define encoderL    4
 #define encoderL_g  3
 #define encoderR   21
 #define encoderR_g 20
@@ -36,7 +37,7 @@
 boolean left_steering, right_steering;
 int vel_L = 100, vel_R = 100;
 
-const int ppr = 50;
+const int ppr = 1800;
 volatile int pulseCountL = 0, pulseCountR = 0;
 volatile int rpmL, rpmR;
 
@@ -49,7 +50,8 @@ volatile double Pcontrol, Dcontrol, PIDcontrol;
 
 float reflect_duration, obstacle_distance, velocity, ttc, rpm;
 short serial_lock = 0;
-int rxBuffer, target_gap;
+int target_gap;
+char rxBuffer;
 
 //   interrupt function definitions
 //------------------------------------------------
@@ -105,14 +107,14 @@ void speedCalibration()
     }
   }
 
-//  Serial.print("Left rpm: ");
-//  Serial.println(rpmL);
-//  Serial.print("Right rpm: ");
-//  Serial.println(rpmR);
-//  Serial.print("left speed : ");
-//  Serial.println(vel_L);
-//  Serial.print("right speed : ");
-//  Serial.println(vel_R);
+  Serial.print("Left rpm: ");
+  Serial.println(rpmL);
+  Serial.print("Right rpm: ");
+  Serial.println(rpmR);
+  Serial.print("left speed : ");
+  Serial.println(vel_L);
+  Serial.print("right speed : ");
+  Serial.println(vel_R);
     
   pulseCountL = 0;
   pulseCountR = 0;
@@ -159,13 +161,20 @@ void setup()
   pinMode(echo, INPUT);
 
   moveFront();
+  
+  Serial.begin(9600);
+  // start the CAN bus at 500 kbps
+  if (!CAN.begin(500E3)) {
+    Serial.println("Starting CAN failed!");
+    while (1);
+  }
 
   attachInterrupt(digitalPinToInterrupt(encoderL), pulseCounterL, RISING);
   attachInterrupt(digitalPinToInterrupt(encoderR), pulseCounterR, RISING);
    
   MsTimer2::set(200, speedCalibration);
   MsTimer2::start();
-  Serial.begin(57600);
+
   speedSetup(0, 0);//initial speed >> 0
 }
 
@@ -213,36 +222,32 @@ void loop()
     serial_lock = 0;
     speedSetup(vel_L, vel_R);
   }
-}
 
-
-void serialEvent()
-{
-    if(!serial_lock)
+  if(CAN.parsePacket())
+  {
+    if(CAN.available())
     {
-        while(Serial.available() > 0)
-        {
-            rxBuffer = Serial.read();
-            target_gap = (signed int)rxBuffer;
-            Serial.print("auto command : ");
-            Serial.println(target_gap);
-            if(target_gap > 0)
-            {
-                left_steering = true;
-                right_steering = false;
-            }
-            else if(target_gap < 0)
-            {
-                left_steering = false;
-                right_steering = true;
-            }
-            else
-            {
-                left_steering = false;
-                right_steering = false;
-                vel_L = 100;
-                vel_R = 100;
-            }
-        }
+      rxBuffer = CAN.read();
+      target_gap = (signed int)rxBuffer;
+      Serial.print("auto command : ");
+      Serial.println(target_gap);
+      if(target_gap > 0)
+      {
+          left_steering = true;
+          right_steering = false;
+      }
+      else if(target_gap < 0)
+      {
+          left_steering = false;
+          right_steering = true;
+      }
+      else
+      {
+          left_steering = false;
+          right_steering = false;
+          vel_L = 100;
+          vel_R = 100;
+      }
     }
+  }
 }

@@ -58,11 +58,15 @@ void loop()
 }
 */
 
-#define encoderYellow 21
+#define encoderYellow 18
 
-#define EB 8
-#define b1 9
-#define b2 10
+#define EB 13
+#define b1 12
+#define b2 11
+
+//#define EB 8
+//#define b1 9
+//#define b2 10
 
 volatile int pulseCount = 0;
 volatile int ppr = 50;
@@ -72,12 +76,13 @@ volatile int rpm_m;
 void pulseCounter()
 {
     pulseCount++;
+
 }
 
 void M()
 {
     rpm_m = int(pulseCount / 0.5 / ppr) * 60;
-    Serial.print("M: ");
+    Serial.print("RPM: ");
     Serial.println(rpm_m);
     Serial.print("pulse count: ");
     Serial.println(pulseCount);
@@ -103,10 +108,4 @@ void setup()
 
 void loop()
 {
-    delay(10000);
-    for(int i = velocity; i > 0; i-=10)
-    {
-        analogWrite(EB, i);
-        delay(500);
-    }
 }

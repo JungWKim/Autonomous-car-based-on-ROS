@@ -17,8 +17,8 @@
 //  Assigning pin numbers
 //------------------------------------------------
 
-#define encoderL    2
-#define encoderL_g  3
+#define encoderL   18
+#define encoderL_g 19
 #define encoderR   21
 #define encoderR_g 20
 
@@ -43,9 +43,9 @@ std_msgs::Int32MultiArray status_msg;
 //------------------------------------------------
 int past_key;/*buffer to store previous state*/ 
 boolean left_steering, right_steering, dont_move;
-int vel_L = 100, vel_R = 100;
+int vel_L = 150, vel_R = 150;
 
-const int ppr = 50;
+const int ppr = 1800;
 volatile int pulseCountL = 0, pulseCountR = 0;
 volatile int rpmL, rpmR, rpm;
 
@@ -88,8 +88,8 @@ void speedCalibration()
         PcontrolL = Kp * errorL;
         DcontrolL = Kd * (errorL - prev_errorL);
         PIDcontrolL = PcontrolL + DcontrolL;
-        if(speed_gapL > 200)      vel_R += PIDcontrolL;
-        else if(speed_gapL < 200) vel_R -= PIDcontrolL;
+        if(speed_gapL > target_gap)      vel_R += PIDcontrolL;
+        else if(speed_gapL < target_gap) vel_R -= PIDcontrolL;
         speed_limit();
         speedSetup(vel_L, vel_R);
         prev_errorL = errorL;
@@ -101,8 +101,8 @@ void speedCalibration()
         PcontrolR = Kp * errorR;
         DcontrolR = Kd * (errorR - prev_errorR);
         PIDcontrolR = PcontrolR + DcontrolR;
-        if(speed_gapR > 200)      vel_L += PIDcontrolR;
-        else if(speed_gapR < 200) vel_L -= PIDcontrolR;
+        if(speed_gapR > target_gap)      vel_L += PIDcontrolR;
+        else if(speed_gapR < target_gap) vel_L -= PIDcontrolR;
         speed_limit();
         speedSetup(vel_L, vel_R);
         prev_errorR = errorR;
