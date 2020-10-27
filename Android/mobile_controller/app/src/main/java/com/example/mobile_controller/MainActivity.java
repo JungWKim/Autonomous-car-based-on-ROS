@@ -50,7 +50,9 @@ public class MainActivity extends AppCompatActivity {
 
     View dialogView;
     String tmp;
-    Integer speed=100;
+    Integer left_speed=100;
+    Integer right_speed = 100;
+    char prev_btn = 'p';
     private char m;
 
     private static final String TAG = "MainActivity";
@@ -95,10 +97,11 @@ public class MainActivity extends AppCompatActivity {
         final ImageButton speedUp = findViewById(R.id.speedUp);
         final ImageButton speedDown = findViewById(R.id.speedDown);
 
-        final TextView speedView = findViewById(R.id.speedView);
+        final TextView left_speedView = findViewById(R.id.left_speedView);
+        final TextView right_speedView = findViewById(R.id.right_speedView);
         final TextView voice_text = findViewById(R.id.voice_text);
 
-        final Switch autoDriveMode = findViewById(R.id.autoDriveMode);
+        //final Switch autoDriveMode = findViewById(R.id.autoDriveMode);
         final Switch voiceControl = findViewById(R.id.voiceControl);
 
         //final WebView stream = findViewById(R.id.stream); //webview 사용할 시
@@ -188,13 +191,18 @@ public class MainActivity extends AppCompatActivity {
                 {
                     case MotionEvent.ACTION_DOWN:
                         Log.d(TAG,"다운");
-
                         go.setBackgroundResource(R.drawable.up_pushed);
-
                         MyClientTask myclientTask_down_W = new MyClientTask(ip,port, 'W');
                         myclientTask_down_W.execute();
                         m='W';
                         System.out.println(m);
+                        if(prev_btn != 'W')
+                        {
+                            left_speed = 100;
+                            right_speed = 100;
+                            left_speedView.setText(left_speed.toString());
+                            right_speedView.setText(right_speed.toString());
+                        }
                         //왼쪽 앞으로
                         if(m=='W') {
                             left.setOnTouchListener(new View.OnTouchListener() {
@@ -209,6 +217,12 @@ public class MainActivity extends AppCompatActivity {
                                             myclientTask_down_Q.execute();
                                             m='Q';
                                             System.out.println(m);
+                                            if(prev_btn != 'Q') {
+                                                left_speed = 100;
+                                                right_speed = 180;
+                                                left_speedView.setText(left_speed.toString());
+                                                right_speedView.setText(right_speed.toString());
+                                            }
                                             break;
 
                                         case MotionEvent.ACTION_UP:
@@ -218,6 +232,7 @@ public class MainActivity extends AppCompatActivity {
                                             myclientTask_up_Q.execute();
                                             m='S';
                                             System.out.println(m);
+                                            prev_btn = 'Q';
                                             break;
                                     }
                                     return false;
@@ -237,6 +252,12 @@ public class MainActivity extends AppCompatActivity {
                                             myclientTask_down_E.execute();
                                             m='E';
                                             System.out.println(m);
+                                            if(prev_btn != 'E') {
+                                                left_speed = 180;
+                                                right_speed = 100;
+                                                left_speedView.setText(left_speed.toString());
+                                                right_speedView.setText(right_speed.toString());
+                                            }
                                             break;
 
                                         case MotionEvent.ACTION_UP:
@@ -246,12 +267,19 @@ public class MainActivity extends AppCompatActivity {
                                             myclientTask_up_W.execute();
                                             m='S';
                                             System.out.println(m);
+                                            prev_btn = 'E';
                                             break;
                                     }
                                     return false;
                                 }
                             });
 
+                        }
+                        if(prev_btn != 'W') {
+                            left_speed = 100;
+                            right_speed = 100;
+                            left_speedView.setText(left_speed.toString());
+                            right_speedView.setText(right_speed.toString());
                         }
                         break;
                     //전진버튼 땠을 때
@@ -262,6 +290,7 @@ public class MainActivity extends AppCompatActivity {
                         myclientTask_up_S.execute();
                         m='S';
                         System.out.println(m);
+                        prev_btn = 'W';
                         break;
                 }
                 return false;
@@ -280,6 +309,12 @@ public class MainActivity extends AppCompatActivity {
                         myclientTask_down_X.execute();
                         m='X';
                         System.out.println(m);
+                        if(prev_btn != 'X') {
+                            left_speed = 100;
+                            right_speed = 100;
+                            left_speedView.setText(left_speed.toString());
+                            right_speedView.setText(right_speed.toString());
+                        }
                         //왼쪽 뒤로
                         if(m=='X') {
                             left.setOnTouchListener(new View.OnTouchListener() {
@@ -294,6 +329,12 @@ public class MainActivity extends AppCompatActivity {
                                             myclientTask_down_Z.execute();
                                             m='Z';
                                             System.out.println(m);
+                                            if(prev_btn != 'Z') {
+                                                left_speed = 100;
+                                                right_speed = 180;
+                                                left_speedView.setText(left_speed.toString());
+                                                right_speedView.setText(right_speed.toString());
+                                            }
                                             break;
 
                                         case MotionEvent.ACTION_UP:
@@ -303,6 +344,7 @@ public class MainActivity extends AppCompatActivity {
                                             myclientTask_up_X.execute();
                                             m='S';
                                             System.out.println(m);
+                                            prev_btn = 'Z';
                                             break;
                                     }
                                     return false;
@@ -322,6 +364,12 @@ public class MainActivity extends AppCompatActivity {
                                             myclientTask_down_C.execute();
                                             m='C';
                                             System.out.println(m);
+                                            if(prev_btn != 'C') {
+                                                left_speed = 180;
+                                                right_speed = 100;
+                                                left_speedView.setText(left_speed.toString());
+                                                right_speedView.setText(right_speed.toString());
+                                            }
                                             break;
 
                                         case MotionEvent.ACTION_UP:
@@ -331,12 +379,19 @@ public class MainActivity extends AppCompatActivity {
                                             myclientTask_up_X.execute();
                                             m='S';
                                             System.out.println(m);
+                                            prev_btn = 'C';
                                             break;
                                     }
                                     return false;
                                 }
                             });
 
+                        }
+                        if(prev_btn != 'X') {
+                            left_speed = 100;
+                            right_speed = 100;
+                            left_speedView.setText(left_speed.toString());
+                            right_speedView.setText(right_speed.toString());
                         }
                         break;
 
@@ -346,6 +401,7 @@ public class MainActivity extends AppCompatActivity {
                         myclientTask_up_S.execute();
                         m='S';
                         System.out.println(m);
+                        prev_btn = 'X';
                         break;
                 }
 
@@ -414,11 +470,42 @@ public class MainActivity extends AppCompatActivity {
                         speedUp.setBackgroundResource(R.drawable.speed_up_button);
                         MyClientTask myclientTask_down_U = new MyClientTask(ip,port, 'U');
                         myclientTask_down_U.execute();
-                        tmp = speedView.getText().toString();
-                        speed = Integer.parseInt(tmp);
-                        if(speed >= 250) speed = 250;
-                        else             speed += 10;
-                        speedView.setText(speed.toString());
+                        left_speed += 10;
+                        right_speed += 10;
+                        if(left_speed > 250)
+                        {
+                            left_speed = 250;
+                            if(prev_btn == 'Q' || prev_btn == 'Z')
+                            {
+                                left_speed = right_speed - 80;
+                            }
+                            else if(prev_btn == 'E' || prev_btn == 'C')
+                            {
+                                right_speed = left_speed - 80;
+                            }
+                            else
+                            {
+                                right_speed = 250;
+                            }
+                        }
+                        if(right_speed > 250)
+                        {
+                            right_speed = 250;
+                            if(prev_btn == 'Q' || prev_btn == 'Z')
+                            {
+                                left_speed = right_speed - 80;
+                            }
+                            else if(prev_btn == 'E' || prev_btn == 'C')
+                            {
+                                right_speed = left_speed - 80;
+                            }
+                            else
+                            {
+                                left_speed = 250;
+                            }
+                        }
+                        left_speedView.setText(left_speed.toString());
+                        right_speedView.setText(right_speed.toString());
                         break;
                 }
 
@@ -439,41 +526,48 @@ public class MainActivity extends AppCompatActivity {
                         speedDown.setBackgroundResource(R.drawable.speed_down_button);
                         MyClientTask myclientTask_down_J = new MyClientTask(ip,port, 'J');
                         myclientTask_down_J.execute();
-                        tmp = speedView.getText().toString();
-                        speed = Integer.parseInt(tmp);
-                        if(speed <= 50) speed = 50;
-                        else           speed -= 10;
-                        speedView.setText(speed.toString());
+                        left_speed -= 10;
+                        right_speed -= 10;
+                        if(left_speed < 50)
+                        {
+                            left_speed = 50;
+                            if(prev_btn == 'Q' || prev_btn == 'Z')
+                            {
+                                right_speed = left_speed + 80;
+                            }
+                            else if(prev_btn == 'E' || prev_btn == 'C')
+                            {
+                                left_speed = right_speed + 80;
+                            }
+                            else
+                            {
+                                right_speed = 50;
+                            }
+                        }
+                        if(right_speed < 50)
+                        {
+                            right_speed = 50;
+                            if(prev_btn == 'Q' || prev_btn == 'Z')
+                            {
+                                right_speed = left_speed + 80;
+                            }
+                            else if(prev_btn == 'E' || prev_btn == 'C')
+                            {
+                                left_speed = right_speed + 80;
+                            }
+                            else
+                            {
+                                left_speed = 50;
+                            }
+                        }
+                        left_speedView.setText(left_speed.toString());
+                        right_speedView.setText(right_speed.toString());
                         break;
                 }
 
                 return false;
             }
         });
-
-        //음성인식 스위치 리스너
-        voiceControl.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-
-                //음성인식 스위치가 켜졌을 때 -> 나머지 버튼 비활성화 및 이미지 변경
-                if(isChecked) {
-                    go.setEnabled(false);
-                    back.setEnabled(false);
-                    speedUp.setEnabled(false);
-                    speedDown.setEnabled(false);
-                    left.setEnabled(false);
-                    right.setEnabled(false);
-
-                    go.setBackgroundResource(R.drawable.up_locked);
-                    back.setBackgroundResource(R.drawable.down_locked);
-                    speedUp.setBackgroundResource(R.drawable.speed_up_locked);
-                    speedDown.setBackgroundResource(R.drawable.speed_down_locked);
-                    left.setBackgroundResource(R.drawable.left_locked);
-                    right.setBackgroundResource(R.drawable.right_locked);
-
-
-                    Toast.makeText(MainActivity.this, "음성인식을 시작합니다.", Toast.LENGTH_SHORT).show();
 /*
                     //음성인식 스위치 켜질 경우 -> 사용자가 한 말을 보여주는 커스텀다이얼로그 생성
                     dialogView = getLayoutInflater().inflate(R.layout.voice_dialog, null);//레이아웃을 담는 View객체 생성
@@ -493,6 +587,28 @@ public class MainActivity extends AppCompatActivity {
                     AlertDialog alertDialog = builder.create();//AlertDialog객체 생성
                     alertDialog.show();
 */
+
+        //음성인식 스위치 리스너
+        voiceControl.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                //음성인식 스위치가 켜졌을 때 -> 나머지 버튼 비활성화 및 이미지 변경
+                if(isChecked) {
+                    go.setEnabled(false);
+                    back.setEnabled(false);
+                    speedUp.setEnabled(false);
+                    speedDown.setEnabled(false);
+                    left.setEnabled(false);
+                    right.setEnabled(false);
+
+                    go.setBackgroundResource(R.drawable.up_locked);
+                    back.setBackgroundResource(R.drawable.down_locked);
+                    speedUp.setBackgroundResource(R.drawable.speed_up_locked);
+                    speedDown.setBackgroundResource(R.drawable.speed_down_locked);
+                    left.setBackgroundResource(R.drawable.left_locked);
+                    right.setBackgroundResource(R.drawable.right_locked);
+
+                    Toast.makeText(MainActivity.this, "음성인식을 시작합니다.", Toast.LENGTH_SHORT).show();
                     MyClientTask myclientTask_down_V = new MyClientTask(ip,port, 'V');
                     myclientTask_down_V.execute();
                     flag=1;
@@ -517,16 +633,14 @@ public class MainActivity extends AppCompatActivity {
 
                     MyClientTask myclientTask_down_B = new MyClientTask(ip,port, 'B');
                     myclientTask_down_B.execute();
-
                     flag=0;
-
                     inputVoice(voice_text);
 
                 }
             }
         });
 
-
+        /*
         //자율주행 스위치 리스너
         autoDriveMode.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
@@ -571,10 +685,10 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
+        */
     }
 
     //음성인식 처리부
-
     public void inputVoice(final TextView voice_text) {
         if(flag==0)
             Toast.makeText(MainActivity.this, "음성인식을 종료합니다.", Toast.LENGTH_SHORT).show();
@@ -595,30 +709,25 @@ public class MainActivity extends AppCompatActivity {
                         System.out.println("onReadyForSpeech.........................");
 
                     }
-
                     @Override
                     public void onBeginningOfSpeech() {
                         if(flag==1){}
                             //Toast.makeText(MainActivity.this, "지금부터 말을 해주세요", Toast.LENGTH_SHORT).show();
 
                     }
-
                     @Override
                     public void onRmsChanged(float rmsdB) {
                         System.out.println("onRmsChanged.........................");
 
                     }
-
                     @Override
                     public void onBufferReceived(byte[] buffer) {
                         System.out.println("onBufferReceived.........................");
                     }
-
                     @Override
                     public void onEndOfSpeech() {
                         System.out.println("onEndOfSpeech.........................");
                     }
-
                     @Override
                     public void onError(int error) {
                         if(flag==1) {
@@ -638,7 +747,6 @@ public class MainActivity extends AppCompatActivity {
                             }
                         }
                     }
-
                     @Override
                     public void onResults(Bundle results) {
                         //stt.destroy();
@@ -649,26 +757,21 @@ public class MainActivity extends AppCompatActivity {
                         mResult.toArray(rs);
                         Toast.makeText(MainActivity.this, rs[0], Toast.LENGTH_SHORT).show();
                         replyAnswer(rs[0], voice_text);
-                        if (rs[0].equals("그만")) {
-                            flag=0;
-                        } else
-                            if(flag==1)
-                                new Handler().postDelayed(new Runnable()
+                        if(flag==1)
+                            new Handler().postDelayed(new Runnable()
+                            {
+                                @Override
+                                public void run()
                                 {
-                                    @Override
-                                    public void run()
-                                    {
-                                        stt.startListening(intent);//딜레이 후 시작할 코드 작성
-                                    }
-                                }, 600);// 2초 정도 딜레이를 준 후 시작
+                                    stt.startListening(intent);//딜레이 후 시작할 코드 작성
+                                }
+                            }, 600);// 2초 정도 딜레이를 준 후 시작
 
                     }
-
                     @Override
                     public void onPartialResults(Bundle partialResults) {
                         System.out.println("onPartialResults.........................");
                     }
-
                     @Override
                     public void onEvent(int eventType, Bundle params) {
                         System.out.println("onEvent.........................");
@@ -683,57 +786,167 @@ public class MainActivity extends AppCompatActivity {
 
     //인식된 음성에 따른 출력 결과 처리부
     public void replyAnswer(String input, TextView voice_text) {
+        final TextView right_speedView = findViewById(R.id.right_speedView);
+        final TextView left_speedView = findViewById(R.id.left_speedView);
         try {
             if(input.equals("앞으로가")) {
                 MyClientTask myclientTask_down_W = new MyClientTask(ip,port, 'W');
                 myclientTask_down_W.execute();
+                if(prev_btn != 'W')
+                {
+                    left_speed = 100;
+                    right_speed = 100;
+                    left_speedView.setText(left_speed.toString());
+                    right_speedView.setText(right_speed.toString());
+                }
+                prev_btn = 'W';
             }
 
             else if(input.equals("뒤로가")) {
                 MyClientTask myclientTask_down_X = new MyClientTask(ip,port, 'X');
                 myclientTask_down_X.execute();
+                if(prev_btn != 'X')
+                {
+                    left_speed = 100;
+                    right_speed = 100;
+                    left_speedView.setText(left_speed.toString());
+                    right_speedView.setText(right_speed.toString());
+                }
+                prev_btn = 'X';
             }
 
             else if(input.contains("왼쪽") && input.contains("앞으로")) {
                 MyClientTask myclientTask_down_Q = new MyClientTask(ip, port, 'Q');
                 myclientTask_down_Q.execute();
+                if(prev_btn != 'Q')
+                {
+                    left_speed = 100;
+                    right_speed = 180;
+                    left_speedView.setText(left_speed.toString());
+                    right_speedView.setText(right_speed.toString());
+                }
+                prev_btn = 'Q';
             }
 
             else if(input.contains("오른쪽") && input.contains("앞으로")) {
                 MyClientTask myclientTask_down_E = new MyClientTask(ip, port, 'E');
                 myclientTask_down_E.execute();
+                if(prev_btn != 'E')
+                {
+                    left_speed = 180;
+                    right_speed = 100;
+                    left_speedView.setText(left_speed.toString());
+                    right_speedView.setText(right_speed.toString());
+                }
+                prev_btn = 'E';
             }
 
             else if(input.contains("왼쪽") && input.contains("뒤로")) {
                 MyClientTask myclientTask_down_Z = new MyClientTask(ip, port, 'Z');
                 myclientTask_down_Z.execute();
+                if(prev_btn != 'Z')
+                {
+                    left_speed = 100;
+                    right_speed = 180;
+                    left_speedView.setText(left_speed.toString());
+                    right_speedView.setText(right_speed.toString());
+                }
+                prev_btn = 'Z';
             }
 
             else if(input.contains("오른쪽") && input.contains("뒤로")) {
                 MyClientTask myclientTask_down_C = new MyClientTask(ip, port, 'C');
                 myclientTask_down_C.execute();
+                if(prev_btn != 'C')
+                {
+                    left_speed = 180;
+                    right_speed = 100;
+                    left_speedView.setText(left_speed.toString());
+                    right_speedView.setText(right_speed.toString());
+                }
+                prev_btn = 'C';
             }
 
             else if(input.equals("속도 올려") || input.equals("속도 높여")) {
                 MyClientTask myclientTask_down_U = new MyClientTask(ip,port, 'U');
                 myclientTask_down_U.execute();
-                final TextView speedView = findViewById(R.id.speedView);
-                tmp = speedView.getText().toString();
-                speed = Integer.parseInt(tmp);
-                if(speed >= 250) speed = 250;
-                else             speed += 10;
-                speedView.setText(speed.toString());
+                left_speed += 10;
+                right_speed += 10;
+                if(left_speed > 250)
+                {
+                    left_speed = 250;
+                    if(prev_btn == 'Q' || prev_btn == 'Z')
+                    {
+                        left_speed = right_speed - 80;
+                    }
+                    else if(prev_btn == 'E' || prev_btn == 'C')
+                    {
+                        right_speed = left_speed - 80;
+                    }
+                    else
+                    {
+                        right_speed = 250;
+                    }
+                }
+                if(right_speed > 250)
+                {
+                    right_speed = 250;
+                    if(prev_btn == 'Q' || prev_btn == 'Z')
+                    {
+                        left_speed = right_speed - 80;
+                    }
+                    else if(prev_btn == 'E' || prev_btn == 'C')
+                    {
+                        right_speed = left_speed - 80;
+                    }
+                    else
+                    {
+                        left_speed = 250;
+                    }
+                }
+                left_speedView.setText(left_speed.toString());
+                right_speedView.setText(right_speed.toString());
             }
 
             else if(input.equals("속도 내려") || input.equals("속도 낮춰")) {
                 MyClientTask myclientTask_down_J = new MyClientTask(ip,port, 'J');
                 myclientTask_down_J.execute();
-                final TextView speedView = findViewById(R.id.speedView);
-                tmp = speedView.getText().toString();
-                speed = Integer.parseInt(tmp);
-                if(speed <= 50) speed = 50;
-                else             speed -= 10;
-                speedView.setText(speed.toString());
+                left_speed -= 10;
+                right_speed -= 10;
+                if(left_speed < 50)
+                {
+                    left_speed = 50;
+                    if(prev_btn == 'Q' || prev_btn == 'Z')
+                    {
+                        right_speed = left_speed + 80;
+                    }
+                    else if(prev_btn == 'E' || prev_btn == 'C')
+                    {
+                        left_speed = right_speed + 80;
+                    }
+                    else
+                    {
+                        right_speed = 50;
+                    }
+                }
+                if(right_speed < 50)
+                {
+                    right_speed = 50;
+                    if(prev_btn == 'Q' || prev_btn == 'Z')
+                    {
+                        right_speed = left_speed + 80;
+                    }
+                    else if(prev_btn == 'E' || prev_btn == 'C')
+                    {
+                        left_speed = right_speed + 80;
+                    }
+                    else
+                    {
+                        left_speed = 50;
+                    }
+                }
+                left_speedView.setText(left_speed.toString());
+                right_speedView.setText(right_speed.toString());
             }
 
             else if(input.equals("정지") || (input.equals("멈춰"))) {
@@ -746,10 +959,6 @@ public class MainActivity extends AppCompatActivity {
                 finish();
             }
 */
-            else {
-
-            }
-
         } catch(Exception e) {
             Toast.makeText(MainActivity.this, e.toString(), Toast.LENGTH_SHORT).show();
         }

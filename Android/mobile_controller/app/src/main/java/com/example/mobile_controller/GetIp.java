@@ -21,7 +21,7 @@ public class GetIp extends AppCompatActivity {
             public void onClick(View v) {
                 Intent intent = new Intent(getApplicationContext(), MainActivity.class);
                 intent.putExtra("ip_num", edt_ip.getText().toString());
-                Toast.makeText(GetIp.this, "ip넘어감"+edt_ip, Toast.LENGTH_SHORT).show();
+                Toast.makeText(GetIp.this, edt_ip.getText().toString(), Toast.LENGTH_SHORT).show();
                 startActivity(intent);
             }
         });

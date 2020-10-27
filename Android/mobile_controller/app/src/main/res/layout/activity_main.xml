@@ -64,13 +64,7 @@
             android:layout_weight="2">
 
             //나가기 버튼
-            <Button
-                android:layout_width="wrap_content"
-                android:layout_height="50dp"
-                android:text="Exit"
-                android:id="@+id/exit_btn"
-                android:gravity="center"
-                android:textSize="25dp"/>
+
 
         </LinearLayout>
 
@@ -82,7 +76,14 @@
             android:gravity="center"
             android:orientation="vertical"
             android:layout_weight="1">
-
+            <Button
+                android:layout_width="wrap_content"
+                android:layout_height="50dp"
+                android:text="Exit"
+                android:id="@+id/exit_btn"
+                android:gravity="center"
+                android:textSize="25dp"/>
+            <!--
             //자율주행 텍스트
             <TextView
                 android:layout_width="wrap_content"
@@ -117,7 +118,7 @@
                     android:text="On"/>
 
             </LinearLayout>
-
+            -->
         </LinearLayout>
 
 
@@ -225,65 +226,119 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="3"
-        android:orientation="vertical">
+        android:orientation="horizontal">
 
-
-        //속도텍스트와 버튼 들어있는 레이아웃
+        //아래 왼쪽 레이아웃
         <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
             android:layout_weight="1"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:gravity="center">
 
-            //속도 표시 텍스트뷰가 위치한 레이아웃
+            //속도 표시
+            <TextView
+                android:id="@+id/left_speedView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="10dp"
+                android:layout_marginRight="10dp"
+                android:text="100"
+                android:background="@drawable/border"
+                android:textSize="30dp" />
+
+        </LinearLayout>
+
+        //아래 가운데 레이아웃
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="2"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            //속도텍스트와 버튼 들어있는 레이아웃
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 android:layout_weight="1"
-                android:gravity="center">
+                android:orientation="vertical">
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Speed"
-                    android:textSize="25dp"/>
+                //속도 표시 텍스트뷰가 위치한 레이아웃
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
+                    android:gravity="center">
 
-            </LinearLayout>
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Speed"
+                        android:textSize="25dp"/>
 
-            //속도값과 증가, 감속 버튼이 있는 레이아웃
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_weight="2"
-                android:gravity="center"
-                android:orientation="horizontal">
+                </LinearLayout>
 
-                //속도 증가 버튼
-                <ImageButton
-                    android:id="@+id/speedUp"
-                    android:layout_width="50dp"
-                    android:layout_height="50dp"
-                    android:background="@drawable/speed_up_button"/>
+                //속도값과 증가, 감속 버튼이 있는 레이아웃
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="2"
+                    android:gravity="center"
+                    android:orientation="horizontal">
 
-                //속도 표시
-                <TextView
-                    android:id="@+id/speedView"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginLeft="10dp"
-                    android:layout_marginRight="10dp"
-                    android:text="100"
-                    android:textSize="30dp" />
+                    //속도 증가 버튼
+                    <ImageButton
+                        android:id="@+id/speedUp"
+                        android:layout_width="50dp"
+                        android:layout_height="50dp"
+                        android:background="@drawable/speed_up_button"/>
 
-                //속도 감소 버튼
-                <ImageButton
-                    android:id="@+id/speedDown"
-                    android:layout_width="50dp"
-                    android:layout_height="50dp"
-                    android:background="@drawable/speed_down_button"/>
+                    //속도 표시
+                    <TextView
+                        android:id="@+id/speedView"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginLeft="10dp"
+                        android:layout_marginRight="10dp"
+                        android:text="100"
+                        android:visibility="gone"
+                        android:textSize="30dp" />
+
+                    //속도 감소 버튼
+                    <ImageButton
+                        android:id="@+id/speedDown"
+                        android:layout_width="50dp"
+                        android:layout_height="50dp"
+                        android:background="@drawable/speed_down_button"/>
+
+                </LinearLayout>
 
             </LinearLayout>
 
         </LinearLayout>
+
+        //아래 왼쪽 레이아웃
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            //속도 표시
+            <TextView
+                android:id="@+id/right_speedView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="10dp"
+                android:layout_marginRight="10dp"
+                android:text="100"
+                android:background="@drawable/border"
+                android:textSize="30dp" />
+        </LinearLayout>
+
+
+
     </LinearLayout>
 </LinearLayout>
