@@ -18,9 +18,9 @@
 //------------------------------------------------
 
 #define encoderL   18
-#define encoderL_g 19
+//#define encoderL_g 19
 #define encoderR   21
-#define encoderR_g 20
+//#define encoderR_g 20
 
 #define EA  6
 #define A1  12
