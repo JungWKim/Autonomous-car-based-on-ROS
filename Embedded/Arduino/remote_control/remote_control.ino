@@ -43,21 +43,19 @@ std_msgs::Int32MultiArray status_msg;
 //------------------------------------------------
 int past_key;/*buffer to store previous state*/ 
 boolean left_steering, right_steering, dont_move;
-int vel_L = 120, vel_R = 120;
+int vel_L = 170, vel_R = 170;
 
 const float ppr = 1800;
 volatile float pulseCountL = 0, pulseCountR = 0;
 volatile int rpmL, rpmR, rpm;
 
-const float Kp = 5.1;
-const float Kd = 1.1;
+const float Kp = 10.0;
+const float Kd = 0.8;
 
-volatile int errorL, errorR, speed_gapL, speed_gapR;
-volatile int target_gap = 6;
-volatile float prev_errorR = 0, prev_errorL = 0;
+volatile int error, speed_gapL, speed_gapR;
+volatile int target_gap = 18;
 
-volatile double PcontrolL, DcontrolL, PIDcontrolL;
-volatile double PcontrolR, DcontrolR, PIDcontrolR;
+volatile double Pcontrol;
 
 float reflect_duration, obstacle_distance, velocity, ttc;
 
@@ -84,38 +82,31 @@ void speedCalibration()
       if(left_steering)
       {
         speed_gapL = rpmR - rpmL;
-        errorL = speed_gapL - target_gap;
-        PcontrolL = Kp * errorL;
-        DcontrolL = Kd * (errorL - prev_errorL);
-        PIDcontrolL = PcontrolL + DcontrolL;
-        if(speed_gapL > target_gap)      vel_R += PIDcontrolL;
-        else if(speed_gapL < target_gap) vel_R -= PIDcontrolL;
+        error = speed_gapL - target_gap;
+        Pcontrol = Kp * error;
+        if(speed_gapL > target_gap)      vel_R += Pcontrol;
+        else if(speed_gapL < target_gap) vel_R -= Pcontrol;
         speed_limit();
         speedSetup(vel_L, vel_R);
-        prev_errorL = errorL;
       }
       else if(right_steering)
       {
         speed_gapR = rpmL - rpmR;
-        errorR = speed_gapR - target_gap;
-        PcontrolR = Kp * errorR;
-        DcontrolR = Kd * (errorR - prev_errorR);
-        PIDcontrolR = PcontrolR + DcontrolR;
-        if(speed_gapR > target_gap)      vel_L += PIDcontrolR;
-        else if(speed_gapR < target_gap) vel_L -= PIDcontrolR;
+        error = speed_gapR - target_gap;
+        Pcontrol = Kp * error;
+        if(speed_gapR > target_gap)      vel_L += Pcontrol;
+        else if(speed_gapR < target_gap) vel_L -= Pcontrol;
         speed_limit();
         speedSetup(vel_L, vel_R);
-        prev_errorR = errorR;
       }
       else
       {
-        if(rpmL != rpmR)
-        {
-          if(rpmL < rpmR) vel_L += 1;
-          else            vel_R += 1;
-          speed_limit();
-          speedSetup(vel_L, vel_R);
-        }
+        error = rpmL - rpmR;
+        Pcontrol = Kp * abs(error);
+        if(error < 0) vel_L += Pcontrol;
+        else if(error > 0) vel_R += Pcontrol;
+        speed_limit();
+        speedSetup(vel_L, vel_R);
       }
     }
     
@@ -165,13 +156,13 @@ void moveBack()
 
 void vertical_drive(int current_key)
 {
-  if((past_key != 1) && (past_key != 2))
+  if(past_key != current_key)
   {
     dont_move = false;
     left_steering = false;
     right_steering = false;
-    vel_L = 120;
-    vel_R = 120;
+    vel_L = 170;
+    vel_R = 170;
     speedSetup(vel_L, vel_R);
   }
 }
@@ -184,7 +175,7 @@ void left_side_drive(int current_key)
     dont_move = false;
     left_steering = true;
     right_steering = false;
-    vel_L = 120;
+    vel_L = 60;
     vel_R = 230;
     speedSetup(vel_L ,vel_R);
   }
@@ -199,7 +190,7 @@ void right_side_drive(int current_key)
     left_steering = false;
     right_steering = true;
     vel_L = 230;
-    vel_R = 120;
+    vel_R = 60;
     speedSetup(vel_L, vel_R);
   }
 }
@@ -253,7 +244,7 @@ void messageCb(const std_msgs::Int32& msg) {
     case 4: moveFront(); right_side_drive(msg.data); past_key = msg.data; break;
     case 5: moveBack();  left_side_drive(msg.data);  past_key = msg.data; break;
     case 6: moveBack();  right_side_drive(msg.data); past_key = msg.data; break;
-    case 7: stop_motor(msg.data); break;
+    case 7: stop_motor(msg.data); past_key = msg.data; break;
     case 8: speedUp(msg.data);    break;
     case 9: speedDown(msg.data);  break;
   } 

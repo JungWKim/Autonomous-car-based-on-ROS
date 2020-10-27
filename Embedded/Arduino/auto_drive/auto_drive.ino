@@ -35,18 +35,16 @@
 //   generate variables
 //------------------------------------------------
 boolean left_steering, right_steering;
-int vel_L = 100, vel_R = 100;
+int vel_L = 170, vel_R = 170;
 
 const int ppr = 1800;
 volatile int pulseCountL = 0, pulseCountR = 0;
 volatile int rpmL, rpmR;
 
-volatile const float Kp = 1.1;
-volatile const float Kd = 1.1;
+volatile const float Kp = 10.0;
 
 volatile int error, speed_gap;
-volatile float prev_error = 0;
-volatile double Pcontrol, Dcontrol, PIDcontrol;
+volatile double Pcontrol;
 
 float reflect_duration, obstacle_distance, velocity, ttc, rpm;
 short can_lock = 0;
@@ -67,19 +65,16 @@ void speed_limit()
 
 void speedCalibration()
 {
-  rpmL = int(pulseCountL / 0.5 / ppr) * 60;
-  rpmR = int(pulseCountR / 0.5 / ppr) * 60;
+  rpmL = (int)((pulseCountL / ppr) * (60.0 / 0.5));
+  rpmR = (int)((pulseCountR / ppr) * (60.0 / 0.5));
 
   if(left_steering)
   {
     speed_gap = rpmR - rpmL;
     error = speed_gap - target_gap;
     Pcontrol = Kp * error;
-    Dcontrol = Kd * (error - prev_error);
-    PIDcontrol = Pcontrol + Dcontrol;
-    prev_error = error;
-    if(speed_gap > target_gap)      vel_R += PIDcontrol;
-    else if(speed_gap < target_gap) vel_R -= PIDcontrol;
+    if(speed_gap > target_gap)      vel_R += Pcontrol;
+    else if(speed_gap < target_gap) vel_R -= Pcontrol;
     speed_limit();
     speedSetup(vel_L, vel_R);
   }
@@ -88,11 +83,8 @@ void speedCalibration()
     speed_gap = rpmL - rpmR;
     error = speed_gap - target_gap;
     Pcontrol = Kp * error;
-    Dcontrol = Kd * (error - prev_error);
-    PIDcontrol = Pcontrol + Dcontrol;
-    prev_error = error;
-    if(speed_gap > target_gap)      vel_L += PIDcontrol;
-    else if(speed_gap < target_gap) vel_L -= PIDcontrol;
+    if(speed_gap > target_gap)      vel_L += Pcontrol;
+    else if(speed_gap < target_gap) vel_L -= Pcontrol;
     speed_limit();
     speedSetup(vel_L, vel_R);
   }
@@ -247,8 +239,8 @@ void loop()
         {
             left_steering = false;
             right_steering = false;
-            vel_L = 100;
-            vel_R = 100;
+            vel_L = 170;
+            vel_R = 170;
         }
       }
     }
