@@ -43,17 +43,17 @@ std_msgs::Int32MultiArray status_msg;
 //------------------------------------------------
 int past_key;/*buffer to store previous state*/ 
 boolean left_steering, right_steering, dont_move;
-int vel_L = 150, vel_R = 150;
+int vel_L = 120, vel_R = 120;
 
-const int ppr = 1800;
-volatile int pulseCountL = 0, pulseCountR = 0;
+const float ppr = 1800;
+volatile float pulseCountL = 0, pulseCountR = 0;
 volatile int rpmL, rpmR, rpm;
 
-const float Kp = 1.1;
+const float Kp = 5.1;
 const float Kd = 1.1;
 
 volatile int errorL, errorR, speed_gapL, speed_gapR;
-volatile int target_gap = 200;
+volatile int target_gap = 6;
 volatile float prev_errorR = 0, prev_errorL = 0;
 
 volatile double PcontrolL, DcontrolL, PIDcontrolL;
@@ -76,8 +76,8 @@ void speed_limit()
 
 void speedCalibration()
 {
-    rpmL = int(pulseCountL / 0.5 / ppr) * 60;
-    rpmR = int(pulseCountR / 0.5 / ppr) * 60;
+    rpmL = (int)((pulseCountL / ppr) * (60.0 / 0.5));
+    rpmR = (int)((pulseCountR / ppr) * (60.0 / 0.5));
 
     if(!dont_move)
     {
@@ -170,8 +170,8 @@ void vertical_drive(int current_key)
     dont_move = false;
     left_steering = false;
     right_steering = false;
-    vel_L = 100;
-    vel_R = 100;
+    vel_L = 120;
+    vel_R = 120;
     speedSetup(vel_L, vel_R);
   }
 }
@@ -184,8 +184,8 @@ void left_side_drive(int current_key)
     dont_move = false;
     left_steering = true;
     right_steering = false;
-    vel_L = 100;
-    vel_R = 180;
+    vel_L = 120;
+    vel_R = 230;
     speedSetup(vel_L ,vel_R);
   }
 }
@@ -198,8 +198,8 @@ void right_side_drive(int current_key)
     dont_move = false;
     left_steering = false;
     right_steering = true;
-    vel_L = 180;
-    vel_R = 100;
+    vel_L = 230;
+    vel_R = 120;
     speedSetup(vel_L, vel_R);
   }
 }
@@ -216,7 +216,6 @@ void stop_motor(int current_key)
     for(i = min(vel_L, vel_R) ; i>0 ; i-=10)
     {
         speedSetup(i, i);
-        delay(50);
     }  
   } 
 }
@@ -254,7 +253,7 @@ void messageCb(const std_msgs::Int32& msg) {
     case 4: moveFront(); right_side_drive(msg.data); past_key = msg.data; break;
     case 5: moveBack();  left_side_drive(msg.data);  past_key = msg.data; break;
     case 6: moveBack();  right_side_drive(msg.data); past_key = msg.data; break;
-    case 7: stop_motor(msg.data); past_key = msg.data; break;
+    case 7: stop_motor(msg.data); break;
     case 8: speedUp(msg.data);    break;
     case 9: speedDown(msg.data);  break;
   } 
@@ -292,7 +291,7 @@ void setup()
   attachInterrupt(digitalPinToInterrupt(encoderL), pulseCounterL, RISING);
   attachInterrupt(digitalPinToInterrupt(encoderR), pulseCounterR, RISING);
    
-  MsTimer2::set(200, speedCalibration);
+  MsTimer2::set(500, speedCalibration);
   MsTimer2::start();
   Serial.begin(57600);
   speedSetup(0, 0);//initial speed >> 0
