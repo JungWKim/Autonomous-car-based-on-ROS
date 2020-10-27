@@ -103,9 +103,8 @@ int write_port()
             perror("queue receive");
             return 1;
         }
-        cout << "queue left_or_right data : " << recv_msg.left_or_right << endl;
         cout << "queue control data : " << recv_msg.control << endl;
-        sendFrame.data[0] = (char)recv_msg.data;
+        sendFrame.data[0] = (char)recv_msg.control;
 
 	    if (write(soc, &sendFrame, sizeof(struct can_frame)) != sizeof(struct can_frame)) {
     		perror("Write");

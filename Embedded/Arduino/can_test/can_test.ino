@@ -1,60 +1,57 @@
-#include <mcp_can.h>
-#include <SPI.h>
+#include <CAN.h>
 
-#define INT 12
-
-long unsigned int rxId;
-unsigned char len = 0;
-unsigned char rxBuf[1];
-
-MCP_CAN CAN(8);                               // Set CS to pin 10
+//#define INT 18
+//#define  CS 53
 
 void setup()
 {
-  Serial.begin(115200);
-  while( CAN_OK != CAN.begin(CAN_500KBPS))
-  {
-      Serial.println("CAN bus init failed");
-      delay(100);
-  }
-  pinMode(INT, INPUT);                            // Setting pin 2 for /INT input
-  //attachInterrupt(digitalPinToInterrupt(2), CAN_int, FALLING);
-  Serial.println("MCP2515 Library Receive Example...");
-}
+  Serial.begin(9600);
+  while (!Serial);
 
-//void CAN_int()
-//{
-//    unsigned char len = 0;
-//    unsigned char buf[8] = "0";
-//
-//    CAN.readMsgBuf(&len, buf);
-//    unsigned long canId = CAN.getCanId();
-//    Serial.print("\nData from ID : 0x");
-//    Serial.println(canId, HEX);
-//    for(int i = 0; i < len; i++)
-//    {
-//        Serial.print(buf[i]);
-//        Serial.print("\t");
-//    }
-//}
+  Serial.println("CAN Receiver");
+
+  // start the CAN bus at 500 kbps
+  if (!CAN.begin(500E3)) {
+    Serial.println("Starting CAN failed!");
+    while (1);
+  }
+  Serial.println("CAN initialized");
+}
 
 void loop()
 {
-    if(!digitalRead(INT))                         // If pin 2 is low, read receive buffer
-    {
-      CAN.readMsgBuf(&len, rxBuf);              // Read data: len = data length, buf = data byte(s)
-      rxId = CAN.getCanId();                    // Get message ID
-      Serial.print("ID: ");
-      Serial.print(rxId, HEX);
-      Serial.print("  Data: ");
-      Serial.println(rxBuf[0], HEX);
-//      for(int i = 0; i<len; i++)                // Print each byte of the data
-//      {
-//        if(rxBuf[i] < 0x10)                     // If data byte is less than 0x10, add a leading zero
-//        {
-//          Serial.print("0");
-//        }
-//        Serial.println(rxBuf[i]);
-//      }
+  int packetSize = CAN.parsePacket();
+
+  if (packetSize) {
+    // received a packet
+    Serial.print("Received ");
+
+    if (CAN.packetExtended()) {
+      Serial.print("extended ");
     }
+
+    if (CAN.packetRtr()) {
+      // Remote transmission request, packet contains no data
+      Serial.print("RTR ");
+    }
+
+    Serial.print("packet with id 0x");
+    Serial.print(CAN.packetId(), HEX);
+
+    if (CAN.packetRtr()) {
+      Serial.print(" and requested length ");
+      Serial.println(CAN.packetDlc());
+    } else {
+      Serial.print(" and length ");
+      Serial.println(packetSize);
+
+      // only print packet data for non-RTR packets
+      while (CAN.available()) {
+        Serial.print((char)CAN.read());
+      }
+      Serial.println();
+    }
+
+    Serial.println();
+  }
 }

@@ -42,47 +42,27 @@ int open_port()
     cout << "[success] can bind" << endl;
 }
 
-#if 0
-int read_port()
-{
-    struct can_frame recvFrame;
-    int recv_bytes = 0;
-
-    while(1)
-    {
-        recv_bytes = read(soc, &recvFrame, sizeof(struct can_frame));
-       	if (recv_bytes < 0) {
-	    	perror("CAN Read");
-		    return 1;
-	    }
-       	for (int i = 0; i < recvFrame.can_dlc; i++)
-        {
-		    printf("message from arduino : %c", recvFrame.data[i]);
-        }
-    }
-}
-#endif
-
 int write_port()
 {
     int n;
 	struct can_frame sendFrame;
-    char data = 'a';
+    int data = -70;
 
 	sendFrame.can_id = 0x555;
 	sendFrame.can_dlc = 1;
-    for(int i = 0; i<8; i++)
-        sendFrame.data[i] = data;
+    for(int i = 0; i<1; i++)
+        sendFrame.data[i] = 'a';
 
     cout << "sending data...." << endl;
     while(1)
     {
-	    if ((n = sendto(soc, &sendFrame, sizeof(sendFrame), 0, (struct sockaddr *)&addr, sizeof(addr))) < 0) {
+	    //if ((n = sendto(soc, &sendFrame, sizeof(sendFrame), 0, (struct sockaddr *)&addr, sizeof(addr))) < 0) {
 	    //if ((n = write(soc, &sendFrame, sizeof(sendFrame))) < 0) {
-	    //if (write(soc, &sendFrame, sizeof(struct can_frame)) != sizeof(struct can_frame)) {
+	    if (write(soc, &sendFrame, sizeof(struct can_frame)) != sizeof(struct can_frame)) {
     		perror("[failed] Write");
     		return 1;
     	}
+        sleep(1);
     }
 }
 
@@ -101,9 +81,4 @@ int main()
         perror("[failed] can socket close");
         return 1;
     }
-    //std::thread t1(read_port);
-    //std::thread t2(write_port);
-
-    //t1.join();
-    //t2.join();
 }

@@ -28,7 +28,6 @@ using namespace std;
 struct message
 {
     long msg_type;
-    int left_or_right;
     int control;
 };
 

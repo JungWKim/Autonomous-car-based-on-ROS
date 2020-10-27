@@ -17,18 +17,21 @@
 //  Assigning pin numbers
 //------------------------------------------------
 
-#define encoderL    2
-#define encoderL_g  3
+#define encoderL   18
+#define encoderL_g 19
 #define encoderR   21
 #define encoderR_g 20
 
-#define EA  13
+#define EA  6
 #define A1  12
 #define A2  11
 
-#define B3  10
+#define B3   7
 #define B4   9
 #define EB   8
+
+#define trig 37
+#define echo 33
 
 //   Basic declaration to use rosserial
 //------------------------------------------------
@@ -40,20 +43,23 @@ std_msgs::Int32MultiArray status_msg;
 //------------------------------------------------
 int past_key;/*buffer to store previous state*/ 
 boolean left_steering, right_steering, dont_move;
-int vel_L = 100, vel_R = 100;
+int vel_L = 120, vel_R = 120;
 
-const int ppr = 50;
-volatile int pulseCountL = 0, pulseCountR = 0;
-volatile int rpmL, rpmR;
+const float ppr = 1800;
+volatile float pulseCountL = 0, pulseCountR = 0;
+volatile int rpmL, rpmR, rpm;
 
-const float Kp = 1.1;
+const float Kp = 5.1;
 const float Kd = 1.1;
 
-volatile int errorL, errorR, gapL, gapR;
+volatile int errorL, errorR, speed_gapL, speed_gapR;
+volatile int target_gap = 6;
 volatile float prev_errorR = 0, prev_errorL = 0;
 
 volatile double PcontrolL, DcontrolL, PIDcontrolL;
 volatile double PcontrolR, DcontrolR, PIDcontrolR;
+
+float reflect_duration, obstacle_distance, velocity, ttc;
 
 
 //   interrupt function definitions
@@ -70,39 +76,33 @@ void speed_limit()
 
 void speedCalibration()
 {
-    rpmL = int(pulseCountL / 0.5 / ppr) * 60;
-    rpmR = int(pulseCountR / 0.5 / ppr) * 60;
+    rpmL = (int)((pulseCountL / ppr) * (60.0 / 0.5));
+    rpmR = (int)((pulseCountR / ppr) * (60.0 / 0.5));
 
     if(!dont_move)
     {
       if(left_steering)
       {
-//      errorL = abs(rpmL - rpmR);
-//      if(errorL > 200)      vel_R -= 1;
-//      else if(errorL < 200) vel_R += 1;
-        gapL = rpmR - rpmL;
-        errorL = gapL - 200;
+        speed_gapL = rpmR - rpmL;
+        errorL = speed_gapL - target_gap;
         PcontrolL = Kp * errorL;
         DcontrolL = Kd * (errorL - prev_errorL);
         PIDcontrolL = PcontrolL + DcontrolL;
-        if(gapL > 200)      vel_R += PIDcontrolL;
-        else if(gapL < 200) vel_R -= PIDcontrolL;
+        if(speed_gapL > target_gap)      vel_R += PIDcontrolL;
+        else if(speed_gapL < target_gap) vel_R -= PIDcontrolL;
         speed_limit();
         speedSetup(vel_L, vel_R);
         prev_errorL = errorL;
       }
       else if(right_steering)
       {
-//      error = abs(rpmL - rpmR);
-//      if(error > 200)      vel_L -= 1;
-//      else if(error < 200) vel_L += 1;
-        gapR = rpmL - rpmR;
-        errorR = gapR - 200;
+        speed_gapR = rpmL - rpmR;
+        errorR = speed_gapR - target_gap;
         PcontrolR = Kp * errorR;
         DcontrolR = Kd * (errorR - prev_errorR);
         PIDcontrolR = PcontrolR + DcontrolR;
-        if(gapR > 200)      vel_L += PIDcontrolR;
-        else if(gapR < 200) vel_L -= PIDcontrolR;
+        if(speed_gapR > target_gap)      vel_L += PIDcontrolR;
+        else if(speed_gapR < target_gap) vel_L -= PIDcontrolR;
         speed_limit();
         speedSetup(vel_L, vel_R);
         prev_errorR = errorR;
@@ -170,8 +170,8 @@ void vertical_drive(int current_key)
     dont_move = false;
     left_steering = false;
     right_steering = false;
-    vel_L = 100;
-    vel_R = 100;
+    vel_L = 120;
+    vel_R = 120;
     speedSetup(vel_L, vel_R);
   }
 }
@@ -184,8 +184,8 @@ void left_side_drive(int current_key)
     dont_move = false;
     left_steering = true;
     right_steering = false;
-    vel_L = 100;
-    vel_R = 180;
+    vel_L = 120;
+    vel_R = 230;
     speedSetup(vel_L ,vel_R);
   }
 }
@@ -198,14 +198,14 @@ void right_side_drive(int current_key)
     dont_move = false;
     left_steering = false;
     right_steering = true;
-    vel_L = 180;
-    vel_R = 100;
+    vel_L = 230;
+    vel_R = 120;
     speedSetup(vel_L, vel_R);
   }
 }
 
 
-void stop(int current_key)
+void stop_motor(int current_key)
 {
   if(past_key != current_key)
   {
@@ -216,7 +216,6 @@ void stop(int current_key)
     for(i = min(vel_L, vel_R) ; i>0 ; i-=10)
     {
         speedSetup(i, i);
-        delay(50);
     }  
   } 
 }
@@ -254,7 +253,7 @@ void messageCb(const std_msgs::Int32& msg) {
     case 4: moveFront(); right_side_drive(msg.data); past_key = msg.data; break;
     case 5: moveBack();  left_side_drive(msg.data);  past_key = msg.data; break;
     case 6: moveBack();  right_side_drive(msg.data); past_key = msg.data; break;
-    case 7: stop(msg.data);       past_key = msg.data; break;
+    case 7: stop_motor(msg.data); break;
     case 8: speedUp(msg.data);    break;
     case 9: speedDown(msg.data);  break;
   } 
@@ -286,20 +285,23 @@ void setup()
   pinMode(B3, OUTPUT);
   pinMode(B4, OUTPUT);
 
+  pinMode(trig, OUTPUT);
+  pinMode(echo, INPUT);
+
   attachInterrupt(digitalPinToInterrupt(encoderL), pulseCounterL, RISING);
   attachInterrupt(digitalPinToInterrupt(encoderR), pulseCounterR, RISING);
    
-  MsTimer2::set(200, speedCalibration);
+  MsTimer2::set(500, speedCalibration);
   MsTimer2::start();
   Serial.begin(57600);
   speedSetup(0, 0);//initial speed >> 0
 }
 
 
-//   Publish received data from Raspberry pi
+//   Publish received data from Jetson TX2
 //---------------------------------------------
 void loop()
-{    
+{      
   status_msg.data[0] = vel_L;
   status_msg.data[1] = vel_R;
   status_msg.data[2] = rpmL;
