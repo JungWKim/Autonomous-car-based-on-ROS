@@ -49,7 +49,7 @@ const float ppr = 1800;
 volatile float pulseCountL = 0, pulseCountR = 0;
 volatile int rpmL, rpmR, rpm;
 
-const float Kp = 20.0;
+const float Kp = 15.0;
 
 volatile int error, speed_gapL, speed_gapR;
 volatile int target_gap = 12;
@@ -98,15 +98,15 @@ void speedCalibration()
         speed_limit();
         speedSetup(vel_L, vel_R);
       }
-      else
-      {
-        error = rpmL - rpmR;
-        Pcontrol = Kp * abs(error);
-        if(error < 0) vel_L += Pcontrol;
-        else if(error > 0) vel_R += Pcontrol;
-        speed_limit();
-        speedSetup(vel_L, vel_R);
-      }
+//      else
+//      {
+//        error = rpmL - rpmR;
+//        Pcontrol = Kp * abs(error);
+//        if(error < 0) vel_L += Pcontrol;
+//        else if(error > 0) vel_R += Pcontrol;
+//        speed_limit();
+//        speedSetup(vel_L, vel_R);
+//      }
     }
     
     Serial.print("Left rpm: ");
@@ -137,19 +137,19 @@ void speedSetup(int left, int right)
 //direction set to move forward
 void moveFront()
 {
-  digitalWrite(A2, LOW);
-  digitalWrite(A1, HIGH);
-  digitalWrite(B4, LOW);
-  digitalWrite(B3, HIGH);
+  digitalWrite(A2, HIGH);
+  digitalWrite(A1, LOW);
+  digitalWrite(B4, HIGH);
+  digitalWrite(B3, LOW);
 }
 
 //direction set to move backward
 void moveBack()
 {
-  digitalWrite(A2, HIGH);
-  digitalWrite(A1, LOW);
-  digitalWrite(B4, HIGH);
-  digitalWrite(B3, LOW);
+  digitalWrite(A2, LOW);
+  digitalWrite(A1, HIGH);
+  digitalWrite(B4, LOW);
+  digitalWrite(B3, HIGH);
 }
 
 
@@ -172,10 +172,10 @@ void left_side_drive(int current_key)
   if(past_key != current_key)
   {
     dont_move = false;
-    left_steering = true;
-    right_steering = false;
-    vel_L = 80;
-    vel_R = 230;
+    left_steering = false;
+    right_steering = true;
+    vel_L = 230;
+    vel_R = 80;
     speedSetup(vel_L ,vel_R);
   }
 }
@@ -186,10 +186,10 @@ void right_side_drive(int current_key)
   if(past_key != current_key)
   {
     dont_move = false;
-    left_steering = false;
-    right_steering = true;
-    vel_L = 230;
-    vel_R = 80;
+    left_steering = true;
+    right_steering = false;
+    vel_L = 80;
+    vel_R = 230;
     speedSetup(vel_L, vel_R);
   }
 }
@@ -237,12 +237,12 @@ void speedDown(int current_key)
 //------------------------------------------------
 void messageCb(const std_msgs::Int32& msg) {
   switch(msg.data){
-    case 2: moveFront(); vertical_drive(msg.data);   past_key = msg.data; break;
-    case 1: moveBack();  vertical_drive(msg.data);   past_key = msg.data; break;
-    case 6: moveFront(); left_side_drive(msg.data);  past_key = msg.data; break;
-    case 5: moveFront(); right_side_drive(msg.data); past_key = msg.data; break;
-    case 4: moveBack();  left_side_drive(msg.data);  past_key = msg.data; break;
-    case 3: moveBack();  right_side_drive(msg.data); past_key = msg.data; break;
+    case 1: moveFront(); vertical_drive(msg.data);   past_key = msg.data; break;
+    case 2: moveBack();  vertical_drive(msg.data);   past_key = msg.data; break;
+    case 3: moveFront(); left_side_drive(msg.data);  past_key = msg.data; break;
+    case 4: moveFront(); right_side_drive(msg.data); past_key = msg.data; break;
+    case 5: moveBack();  left_side_drive(msg.data);  past_key = msg.data; break;
+    case 6: moveBack();  right_side_drive(msg.data); past_key = msg.data; break;
     case 7: stop_motor(msg.data); past_key = msg.data; break;
     case 8: speedUp(msg.data);    break;
     case 9: speedDown(msg.data);  break;
