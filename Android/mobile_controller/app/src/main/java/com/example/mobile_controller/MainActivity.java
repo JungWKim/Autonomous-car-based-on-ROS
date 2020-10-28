@@ -50,8 +50,8 @@ public class MainActivity extends AppCompatActivity {
 
     View dialogView;
     String tmp;
-    Integer left_speed=100;
-    Integer right_speed = 100;
+    Integer left_speed=170;
+    Integer right_speed = 170;
     char prev_btn = 'p';
     private char m;
 
@@ -198,8 +198,8 @@ public class MainActivity extends AppCompatActivity {
                         System.out.println(m);
                         if(prev_btn != 'W')
                         {
-                            left_speed = 100;
-                            right_speed = 100;
+                            left_speed = 170;
+                            right_speed = 170;
                             left_speedView.setText(left_speed.toString());
                             right_speedView.setText(right_speed.toString());
                         }
@@ -218,8 +218,8 @@ public class MainActivity extends AppCompatActivity {
                                             m='Q';
                                             System.out.println(m);
                                             if(prev_btn != 'Q') {
-                                                left_speed = 100;
-                                                right_speed = 180;
+                                                left_speed = 80;
+                                                right_speed = 230;
                                                 left_speedView.setText(left_speed.toString());
                                                 right_speedView.setText(right_speed.toString());
                                             }
@@ -253,8 +253,8 @@ public class MainActivity extends AppCompatActivity {
                                             m='E';
                                             System.out.println(m);
                                             if(prev_btn != 'E') {
-                                                left_speed = 180;
-                                                right_speed = 100;
+                                                left_speed = 230;
+                                                right_speed = 80;
                                                 left_speedView.setText(left_speed.toString());
                                                 right_speedView.setText(right_speed.toString());
                                             }
@@ -276,8 +276,8 @@ public class MainActivity extends AppCompatActivity {
 
                         }
                         if(prev_btn != 'W') {
-                            left_speed = 100;
-                            right_speed = 100;
+                            left_speed = 170;
+                            right_speed = 170;
                             left_speedView.setText(left_speed.toString());
                             right_speedView.setText(right_speed.toString());
                         }
@@ -310,8 +310,8 @@ public class MainActivity extends AppCompatActivity {
                         m='X';
                         System.out.println(m);
                         if(prev_btn != 'X') {
-                            left_speed = 100;
-                            right_speed = 100;
+                            left_speed = 170;
+                            right_speed = 170;
                             left_speedView.setText(left_speed.toString());
                             right_speedView.setText(right_speed.toString());
                         }
@@ -330,7 +330,7 @@ public class MainActivity extends AppCompatActivity {
                                             m='Z';
                                             System.out.println(m);
                                             if(prev_btn != 'Z') {
-                                                left_speed = 100;
+                                                left_speed = 80;
                                                 right_speed = 180;
                                                 left_speedView.setText(left_speed.toString());
                                                 right_speedView.setText(right_speed.toString());
@@ -365,8 +365,8 @@ public class MainActivity extends AppCompatActivity {
                                             m='C';
                                             System.out.println(m);
                                             if(prev_btn != 'C') {
-                                                left_speed = 180;
-                                                right_speed = 100;
+                                                left_speed = 230;
+                                                right_speed = 80;
                                                 left_speedView.setText(left_speed.toString());
                                                 right_speedView.setText(right_speed.toString());
                                             }
@@ -388,8 +388,8 @@ public class MainActivity extends AppCompatActivity {
 
                         }
                         if(prev_btn != 'X') {
-                            left_speed = 100;
-                            right_speed = 100;
+                            left_speed = 170;
+                            right_speed = 170;
                             left_speedView.setText(left_speed.toString());
                             right_speedView.setText(right_speed.toString());
                         }
@@ -794,8 +794,8 @@ public class MainActivity extends AppCompatActivity {
                 myclientTask_down_W.execute();
                 if(prev_btn != 'W')
                 {
-                    left_speed = 100;
-                    right_speed = 100;
+                    left_speed = 170;
+                    right_speed = 170;
                     left_speedView.setText(left_speed.toString());
                     right_speedView.setText(right_speed.toString());
                 }
@@ -807,8 +807,8 @@ public class MainActivity extends AppCompatActivity {
                 myclientTask_down_X.execute();
                 if(prev_btn != 'X')
                 {
-                    left_speed = 100;
-                    right_speed = 100;
+                    left_speed = 170;
+                    right_speed = 170;
                     left_speedView.setText(left_speed.toString());
                     right_speedView.setText(right_speed.toString());
                 }
@@ -820,8 +820,8 @@ public class MainActivity extends AppCompatActivity {
                 myclientTask_down_Q.execute();
                 if(prev_btn != 'Q')
                 {
-                    left_speed = 100;
-                    right_speed = 180;
+                    left_speed = 80;
+                    right_speed = 230;
                     left_speedView.setText(left_speed.toString());
                     right_speedView.setText(right_speed.toString());
                 }
@@ -833,8 +833,8 @@ public class MainActivity extends AppCompatActivity {
                 myclientTask_down_E.execute();
                 if(prev_btn != 'E')
                 {
-                    left_speed = 180;
-                    right_speed = 100;
+                    left_speed = 230;
+                    right_speed = 80;
                     left_speedView.setText(left_speed.toString());
                     right_speedView.setText(right_speed.toString());
                 }
@@ -846,8 +846,8 @@ public class MainActivity extends AppCompatActivity {
                 myclientTask_down_Z.execute();
                 if(prev_btn != 'Z')
                 {
-                    left_speed = 100;
-                    right_speed = 180;
+                    left_speed = 80;
+                    right_speed = 230;
                     left_speedView.setText(left_speed.toString());
                     right_speedView.setText(right_speed.toString());
                 }
@@ -859,8 +859,8 @@ public class MainActivity extends AppCompatActivity {
                 myclientTask_down_C.execute();
                 if(prev_btn != 'C')
                 {
-                    left_speed = 180;
-                    right_speed = 100;
+                    left_speed = 230;
+                    right_speed = 80;
                     left_speedView.setText(left_speed.toString());
                     right_speedView.setText(right_speed.toString());
                 }
