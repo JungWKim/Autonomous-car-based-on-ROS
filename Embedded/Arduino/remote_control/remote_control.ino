@@ -49,11 +49,10 @@ const float ppr = 1800;
 volatile float pulseCountL = 0, pulseCountR = 0;
 volatile int rpmL, rpmR, rpm;
 
-const float Kp = 10.0;
-const float Kd = 0.8;
+const float Kp = 20.0;
 
 volatile int error, speed_gapL, speed_gapR;
-volatile int target_gap = 18;
+volatile int target_gap = 12;
 
 volatile double Pcontrol;
 
@@ -175,7 +174,7 @@ void left_side_drive(int current_key)
     dont_move = false;
     left_steering = true;
     right_steering = false;
-    vel_L = 60;
+    vel_L = 80;
     vel_R = 230;
     speedSetup(vel_L ,vel_R);
   }
@@ -190,7 +189,7 @@ void right_side_drive(int current_key)
     left_steering = false;
     right_steering = true;
     vel_L = 230;
-    vel_R = 60;
+    vel_R = 80;
     speedSetup(vel_L, vel_R);
   }
 }
@@ -238,12 +237,12 @@ void speedDown(int current_key)
 //------------------------------------------------
 void messageCb(const std_msgs::Int32& msg) {
   switch(msg.data){
-    case 1: moveFront(); vertical_drive(msg.data);   past_key = msg.data; break;
-    case 2: moveBack();  vertical_drive(msg.data);   past_key = msg.data; break;
-    case 3: moveFront(); left_side_drive(msg.data);  past_key = msg.data; break;
-    case 4: moveFront(); right_side_drive(msg.data); past_key = msg.data; break;
-    case 5: moveBack();  left_side_drive(msg.data);  past_key = msg.data; break;
-    case 6: moveBack();  right_side_drive(msg.data); past_key = msg.data; break;
+    case 2: moveFront(); vertical_drive(msg.data);   past_key = msg.data; break;
+    case 1: moveBack();  vertical_drive(msg.data);   past_key = msg.data; break;
+    case 6: moveFront(); left_side_drive(msg.data);  past_key = msg.data; break;
+    case 5: moveFront(); right_side_drive(msg.data); past_key = msg.data; break;
+    case 4: moveBack();  left_side_drive(msg.data);  past_key = msg.data; break;
+    case 3: moveBack();  right_side_drive(msg.data); past_key = msg.data; break;
     case 7: stop_motor(msg.data); past_key = msg.data; break;
     case 8: speedUp(msg.data);    break;
     case 9: speedDown(msg.data);  break;
