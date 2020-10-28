@@ -161,6 +161,6 @@ void loop()
     if(!aeb_signal)
     {
       speedSetup(170, 170);
-      status_monitor();
     }
+    status_monitor();
 }
