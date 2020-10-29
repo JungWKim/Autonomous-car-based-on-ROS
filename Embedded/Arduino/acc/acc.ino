@@ -33,8 +33,6 @@ void print_status()
     Serial.println(velocity);
     Serial.print("ttc : ");
     Serial.println(ttc);
-    Serial.print("aeb signal : ");
-    Serial.println(aeb_signal);
 }
 
 float calculate_ttc()
@@ -129,26 +127,25 @@ void setup()
 
 void loop()
 {
-  if(!aeb_signal)
-  {
-      obstacle_distance = detect_distance();
-      if(obstacle_distance > 100)
-      {
-        speedSetup(max_vel, max_vel);
-      }
-      else if(obstacle_distance < 80 and obstacle_distance >= 60)
-      {
-        speedSetup((max_vel / 25) * 17, (max_vel / 25) * 17);
-      }
-      else if(obstacle_distance < 60 and obstacle_distance >= 40)
-      {
-        speedSetup((max_vel / 25) * 13, (max_vel / 25) * 13);
-      }
-      else
-      {
-        speedSetup((max_vel / 25) * 9, (max_vel / 25) * 9);
-        aeb_handler();
-      }
-  }
+
+    obstacle_distance = detect_distance();
+    if(obstacle_distance > 100)
+    {
+      speedSetup(max_vel, max_vel);
+    }
+    else if(obstacle_distance < 80 and obstacle_distance >= 60)
+    {
+      speedSetup((max_vel / 25) * 17, (max_vel / 25) * 17);
+    }
+    else if(obstacle_distance < 60 and obstacle_distance >= 40)
+    {
+      speedSetup((max_vel / 25) * 13, (max_vel / 25) * 13);
+    }
+    else
+    {
+      speedSetup((max_vel / 25) * 9, (max_vel / 25) * 9);
+      aeb_handler();
+    }
+  
   print_status();
 }

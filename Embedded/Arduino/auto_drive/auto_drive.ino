@@ -17,15 +17,15 @@
 //------------------------------------------------
 
 #define encoderL   18
-#define encoderL_g 19
+//#define encoderL_g 19
 #define encoderR   21
-#define encoderR_g 20
+//#define encoderR_g 20
 
 #define EA  6
 #define A1  12
 #define A2  11
 
-#define B3  10
+#define B3   7
 #define B4   9
 #define EB   8
 
@@ -35,7 +35,7 @@
 //   generate variables
 //------------------------------------------------
 boolean left_steering, right_steering;
-int vel_L = 170, vel_R = 170;
+int vel_L = 50, vel_R = 50;
 
 const int ppr = 1800;
 volatile int pulseCountL = 0, pulseCountR = 0;
@@ -47,9 +47,9 @@ volatile int error, speed_gap;
 volatile double Pcontrol;
 
 float reflect_duration, obstacle_distance, velocity, ttc, rpm;
-short can_lock = 0;
 int target_gap;
 char rxBuffer;
+int pid;
 
 //   interrupt function definitions
 //------------------------------------------------
@@ -62,52 +62,89 @@ void speed_limit()
     else if(vel_R < 50) vel_R = 50;
 }
 
+float detect_distance()
+{
+  float _distance;
+  digitalWrite(trig, LOW);
+  delayMicroseconds(2);
+  digitalWrite(trig, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trig, LOW);
+  reflect_duration = pulseIn(echo, HIGH);
+  _distance = ((float)(340 * reflect_duration) / 5000) / 2;
+  return _distance;
+}
+
+float calculate_ttc()
+{
+  float _ttc;
+  velocity = (rpm * 6.6 * 3.141592) / 60;
+  _ttc = (obstacle_distance / velocity) - 1.0;// 1 is system delay
+  if(_ttc < 0) _ttc = 0;
+  return _ttc;
+}
+
+void print_status()
+{
+//  Serial.print("rpmL : ");
+//  Serial.println(rpmL);
+//  Serial.print("rpmR : ");
+//  Serial.println(rpmR);
+//  Serial.print("distance : ");
+//  Serial.println(obstacle_distance);
+//  Serial.print("velocity : ");
+//  Serial.println(velocity);
+//  Serial.print("left speed : ");
+//  Serial.println(vel_L);
+//  Serial.print("right speed : ");
+//  Serial.println(vel_R);
+//  Serial.print("ttc : ");
+//  Serial.println(ttc);
+    Serial.print("received pid : ");
+    Serial.println(rxBuffer);
+    
+}
 
 void speedCalibration()
 {
   rpmL = (int)((pulseCountL / ppr) * (60.0 / 0.5));
   rpmR = (int)((pulseCountR / ppr) * (60.0 / 0.5));
+  rpm = (rpmL + rpmR) / 2;
 
   if(left_steering)
   {
-    speed_gap = rpmR - rpmL;
-    error = speed_gap - target_gap;
-    Pcontrol = Kp * error;
-    if(speed_gap > target_gap)      vel_R += Pcontrol;
-    else if(speed_gap < target_gap) vel_R -= Pcontrol;
-    speed_limit();
-    speedSetup(vel_L, vel_R);
+//    speed_gap = rpmR - rpmL;
+//    error = speed_gap - target_gap;
+//    Pcontrol = Kp * error;
+//    if(speed_gap > target_gap)      vel_L += Pcontrol;
+//    else if(speed_gap < target_gap) vel_L -= Pcontrol;
+//    speed_limit();
+//    speedSetup(vel_L, vel_R);
+    speedSetup(60, 70);
   }
   else if(right_steering)
   {
-    speed_gap = rpmL - rpmR;
-    error = speed_gap - target_gap;
-    Pcontrol = Kp * error;
-    if(speed_gap > target_gap)      vel_L += Pcontrol;
-    else if(speed_gap < target_gap) vel_L -= Pcontrol;
-    speed_limit();
-    speedSetup(vel_L, vel_R);
+//    speed_gap = rpmL - rpmR;
+//    error = speed_gap - target_gap;
+//    Pcontrol = Kp * error;
+//    if(speed_gap > target_gap)      vel_R += Pcontrol;
+//    else if(speed_gap < target_gap) vel_R -= Pcontrol;
+//    speed_limit();
+//    speedSetup(vel_L, vel_R);
+      speedSetup(70, 60);
   }
   else
   {
-    if(rpmL != rpmR)
-    {
-      if(rpmL < rpmR) vel_L += 1;
-      else            vel_R += 1;
-      speed_limit();
-      speedSetup(vel_L, vel_R);
-    }
+//    if(rpmL != rpmR)
+//    {
+//      if(rpmL < rpmR) vel_L += 1;
+//      else            vel_R += 1;
+//      speed_limit();
+//      speedSetup(vel_L, vel_R);
+//    }
+      speedSetup(50, 50);
   }
 
-  Serial.print("Left rpm: ");
-  Serial.println(rpmL);
-  Serial.print("Right rpm: ");
-  Serial.println(rpmR);
-  Serial.print("left speed : ");
-  Serial.println(vel_L);
-  Serial.print("right speed : ");
-  Serial.println(vel_R);
-    
   pulseCountL = 0;
   pulseCountR = 0;
 }
@@ -127,10 +164,10 @@ void speedSetup(int left, int right)
 //direction set to move forward
 void moveFront()
 {
-  digitalWrite(A2, LOW);
-  digitalWrite(A1, HIGH);
-  digitalWrite(B4, LOW);
-  digitalWrite(B3, HIGH);
+  digitalWrite(A2, HIGH);
+  digitalWrite(A1, LOW);
+  digitalWrite(B4, HIGH);
+  digitalWrite(B3, LOW);
 }
 
 
@@ -154,12 +191,7 @@ void setup()
 
   moveFront();
   
-  Serial.begin(9600);
-  // start the CAN bus at 500 kbps
-  if (!CAN.begin(500E3)) {
-    Serial.println("Starting CAN failed!");
-    while (1);
-  }
+  Serial.begin(57600);
 
   attachInterrupt(digitalPinToInterrupt(encoderL), pulseCounterL, RISING);
   attachInterrupt(digitalPinToInterrupt(encoderR), pulseCounterR, RISING);
@@ -167,7 +199,7 @@ void setup()
   MsTimer2::set(200, speedCalibration);
   MsTimer2::start();
 
-  speedSetup(0, 0);//initial speed >> 0
+  speedSetup(50, 50);//initial speed >> 0
 }
 
 
@@ -175,74 +207,33 @@ void setup()
 //---------------------------------------------
 void loop()
 {    
-  digitalWrite(trig, LOW);
-  delayMicroseconds(2);
-  digitalWrite(trig, HIGH);
-  delayMicroseconds(10);
-  digitalWrite(trig, LOW);
-  reflect_duration = pulseIn(echo, HIGH);
-  obstacle_distance = ((float)(340 * reflect_duration) / 10000) / 2;
-  rpm = (rpmL + rpmR) / 2;
-  velocity = (rpm * 6.6 * 3.141592) / 60;
-  ttc = (obstacle_distance / velocity) - 1.0;// 1 is system delay
-  if(velocity <= 0) ttc = 0;
-  if(ttc < 0) ttc = 0;
-  Serial.print("distance : ");
-  Serial.println(obstacle_distance);
-  Serial.print("velocity : ");
-  Serial.println(velocity);
-  Serial.print("ttc : ");
-  Serial.println(ttc);
-
-  if(ttc <= 2)
-  {
-    can_lock = 1;
-    speedSetup(0, 0);
-  }
-  else if(ttc <= 3)
-  {
-    can_lock = 0;
-    speedSetup(vel_L - 50, vel_R - 50);
-  }
-  else if(ttc <= 4)
-  {
-    can_lock = 0;
-    speedSetup(vel_L - 30, vel_R - 30);
-  }
-  else
-  {
-    can_lock = 0;
-    speedSetup(vel_L, vel_R);
-  }
-
-  if(!can_lock)
-  {
-    if(CAN.parsePacket())
+    obstacle_distance = detect_distance();
+    ttc = calculate_ttc();
+    
+    if(Serial.available() > 0)
     {
-      if(CAN.available())
-      {
-        rxBuffer = CAN.read();
-        target_gap = (signed int)rxBuffer;
-        Serial.print("auto command : ");
-        Serial.println(target_gap);
-        if(target_gap > 0)
-        {
-            left_steering = true;
-            right_steering = false;
-        }
-        else if(target_gap < 0)
-        {
-            left_steering = false;
-            right_steering = true;
-        }
-        else
-        {
-            left_steering = false;
-            right_steering = false;
-            vel_L = 170;
-            vel_R = 170;
-        }
-      }
+        rxBuffer = Serial.read();
+        pid = (signed int)rxBuffer;
     }
-  }
+    
+    target_gap = pid;
+    if(target_gap > 0)
+    {
+        left_steering = true;
+        right_steering = false;
+    }
+    else if(target_gap < 0)
+    {
+        left_steering = false;
+        right_steering = true;
+    }
+    else
+    {
+        left_steering = false;
+        right_steering = false;
+        vel_L = 50;
+        vel_R = 50;
+    }
+
+    print_status();
 }
