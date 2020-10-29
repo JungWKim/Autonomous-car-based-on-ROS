@@ -63,11 +63,23 @@ float reflect_duration, obstacle_distance, velocity, ttc;
 //------------------------------------------------
 void speed_limit()
 {
-    if(vel_L > 250) vel_L = 250;
-    else if(vel_L < 50) vel_L = 50;
+    if(vel_L > 250) 
+    {
+        vel_L = 250;
+    }
+    else if(vel_L < 50) 
+    {
+        vel_L = 50;
+    }
         
-    if(vel_R > 250) vel_R = 250;
-    else if(vel_R < 50) vel_R = 50;
+    if(vel_R > 250) 
+    {
+        vel_R = 250;
+    }
+    else if(vel_R < 50) 
+    {
+        vel_R = 50;
+    }
 }
 
 
