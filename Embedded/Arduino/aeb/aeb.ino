@@ -27,7 +27,7 @@ volatile int error;
 
 volatile double Pcontrol;
 
-void status_monitor()
+void print_status()
 {
     Serial.print("distance : ");
     Serial.println(obstacle_distance);
@@ -74,7 +74,12 @@ void aeb_handler()
           vel_L = 0;
           vel_R = 0;
           speedSetup(vel_L, vel_R);
-          while(obstacle_distance <= 50);
+          while(1)
+          {
+            obstacle_distance = detect_distance();
+            print_status();
+            if(obstacle_distance > 40) break;
+          }
       }
       else if(ttc <= 4)
       {
@@ -93,7 +98,7 @@ void aeb_handler()
     {
       aeb_signal = 0;
     }
-    status_monitor();
+    print_status();
 }
 
 void speedCalibration()
@@ -161,6 +166,6 @@ void loop()
     if(!aeb_signal)
     {
       speedSetup(170, 170);
-      status_monitor();
+      print_status();
     }
 }

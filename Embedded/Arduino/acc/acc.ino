@@ -17,6 +17,7 @@
 
 float reflect_duration, obstacle_distance, velocity, ttc;
 int vel_L = 170, vel_R = 170;
+const int max_vel = 250;
 short aeb_signal = 0;
 const float ppr = 1800;
 volatile float pulseCountL = 0, pulseCountR = 0;
@@ -27,7 +28,7 @@ volatile int error;
 
 volatile double Pcontrol;
 
-void status_monitor()
+void print_status()
 {
     Serial.print("distance : ");
     Serial.println(obstacle_distance);
@@ -35,10 +36,19 @@ void status_monitor()
 //    Serial.println(rpmL);
 //    Serial.print("rpmR : ");
 //    Serial.println(rpmR);
-    Serial.print("velocity : ");
-    Serial.println(velocity);
+//    Serial.print("velocity : ");
+//    Serial.println(velocity);
     Serial.print("ttc : ");
     Serial.println(ttc);
+}
+
+float calculate_ttc()
+{
+  float _ttc;
+  velocity = (rpm * 6.6 * 3.141592) / 60;
+  _ttc = (obstacle_distance / velocity) - 1;
+  if(_ttc < 0) _ttc = 0;
+  return _ttc;
 }
 
 void speedSetup(int left, int right)
@@ -62,38 +72,45 @@ float detect_distance()
 
 void aeb_handler()
 {
-    obstacle_distance = detect_distance();
     if(obstacle_distance <= 40)
     {
       aeb_signal = 1;
-      velocity = (rpm * 6.6 * 3.141592) / 60;
-      ttc = (obstacle_distance / velocity) - 1;
-      if(ttc < 0) ttc = 0;
-      if(ttc <= 3)
+      if(ttc > 3.5)
       {
-          vel_L = 0;
-          vel_R = 0;
+          vel_L = 130;
+          vel_R = 130;
           speedSetup(vel_L, vel_R);
-          while(obstacle_distance <= 50);
       }
-      else if(ttc <= 4)
+      else if(ttc <= 3.5 and ttc > 2.5)
+      {
+          vel_L = 100;
+          vel_R = 100;
+          speedSetup(vel_L, vel_R);
+      }
+      else if(ttc <= 2.5 and ttc > 1.5)
       {
           vel_L = 50;
           vel_R = 50;
           speedSetup(vel_L, vel_R);
       }
-      else if(ttc <= 5)
+      else
       {
-          vel_L = 80;
-          vel_R = 80;
+          vel_L = 0;
+          vel_R = 0;
           speedSetup(vel_L, vel_R);
+          while(1)
+          {
+            obstacle_distance = detect_distance();
+            if(obstacle_distance > 15) break;
+          }
       }
+      obstacle_distance = detect_distance();
+      ttc = calculate_ttc();
     }
     else
     {
       aeb_signal = 0;
     }
-    status_monitor();
 }
 
 void speedCalibration()
@@ -160,7 +177,11 @@ void loop()
 {
     if(!aeb_signal)
     {
-      speedSetup(170, 170);
+      obstacle_distance = detect_distance();
+      if(obstacle_distance >= 100)
+      {
+        speedSetup(max_ 
+      }
     }
-    status_monitor();
+    print_status();
 }

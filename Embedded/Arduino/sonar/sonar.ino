@@ -1,5 +1,5 @@
-#define trig 5
-#define echo 6
+#define trig 37
+#define echo 33
 
 // detectable distance : 2 ~ 230 cm
 
