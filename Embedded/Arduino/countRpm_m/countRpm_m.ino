@@ -1,18 +1,18 @@
 #include <MsTimer2.h>
 
-#define encoderYellow 21
+#define encoderYellow 18
 
 //#define EB 13
 //#define b1 12
 //#define b2 11
 
-#define EB 8
-#define b1 9
-#define b2 10
+#define EB 6
+#define b1 12
+#define b2 11
 
 volatile float pulseCount = 0;
 volatile float ppr = 1800;
-volatile int velocity = 120, Tc = 500;
+volatile int velocity = 40, Tc = 500;
 volatile int rpm_m;
 
 void pulseCounter()

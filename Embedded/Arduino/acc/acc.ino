@@ -16,17 +16,10 @@
 #define echo 33
 
 float reflect_duration, obstacle_distance, velocity, ttc;
-int vel_L = 170, vel_R = 170;
-const int max_vel = 250;
-short aeb_signal = 0;
+const float max_vel = 250;
 const float ppr = 1800;
 volatile float pulseCountL = 0, pulseCountR = 0;
 volatile int rpmL, rpmR, rpm;
-
-const float Kp = 10.0;
-volatile int error;
-
-volatile double Pcontrol;
 
 void print_status()
 {
@@ -36,10 +29,12 @@ void print_status()
 //    Serial.println(rpmL);
 //    Serial.print("rpmR : ");
 //    Serial.println(rpmR);
-//    Serial.print("velocity : ");
-//    Serial.println(velocity);
+    Serial.print("velocity : ");
+    Serial.println(velocity);
     Serial.print("ttc : ");
     Serial.println(ttc);
+    Serial.print("aeb signal : ");
+    Serial.println(aeb_signal);
 }
 
 float calculate_ttc()
@@ -72,44 +67,21 @@ float detect_distance()
 
 void aeb_handler()
 {
-    if(obstacle_distance <= 40)
+    if(obstacle_distance <= 30)
     {
-      aeb_signal = 1;
-      if(ttc > 3.5)
+      ttc = calculate_ttc();
+      if(ttc <= 1.5)
       {
-          vel_L = 130;
-          vel_R = 130;
-          speedSetup(vel_L, vel_R);
-      }
-      else if(ttc <= 3.5 and ttc > 2.5)
-      {
-          vel_L = 100;
-          vel_R = 100;
-          speedSetup(vel_L, vel_R);
-      }
-      else if(ttc <= 2.5 and ttc > 1.5)
-      {
-          vel_L = 50;
-          vel_R = 50;
-          speedSetup(vel_L, vel_R);
-      }
-      else
-      {
-          vel_L = 0;
-          vel_R = 0;
-          speedSetup(vel_L, vel_R);
+          speedSetup(0, 0);
           while(1)
           {
             obstacle_distance = detect_distance();
-            if(obstacle_distance > 15) break;
+            if(obstacle_distance > 40) 
+            {
+              break;
+            }
           }
       }
-      obstacle_distance = detect_distance();
-      ttc = calculate_ttc();
-    }
-    else
-    {
-      aeb_signal = 0;
     }
 }
 
@@ -118,23 +90,6 @@ void speedCalibration()
     rpmL = (int)((pulseCountL / ppr) * (60.0 / 0.5));
     rpmR = (int)((pulseCountR / ppr) * (60.0 / 0.5));
     rpm = (rpmL + rpmR) / 2;
-    aeb_handler();
-
-//    error = rpmL - rpmR;
-//    Pcontrol = Kp * abs(error);
-//    if(error < 0) vel_L += Pcontrol;
-//    else if(error > 0) vel_R += Pcontrol;
-//    speed_limit();
-//    speedSetup(vel_L, vel_R);
-    
-//    Serial.print("Left rpm: ");
-//    Serial.println(rpmL);
-//    Serial.print("Right rpm: ");
-//    Serial.println(rpmR);
-//    Serial.print("left speed : ");
-//    Serial.println(vel_L);
-//    Serial.print("right speed : ");
-//    Serial.println(vel_R);
     
     pulseCountL = 0;
     pulseCountR = 0;
@@ -163,7 +118,6 @@ void setup()
            
     MsTimer2::set(500, speedCalibration);
     MsTimer2::start();
-    speedSetup(170, 170);//initial speed
 
     digitalWrite(A2, HIGH);
     digitalWrite(A1, LOW);
@@ -175,13 +129,26 @@ void setup()
 
 void loop()
 {
-    if(!aeb_signal)
-    {
+  if(!aeb_signal)
+  {
       obstacle_distance = detect_distance();
-      if(obstacle_distance >= 100)
+      if(obstacle_distance > 100)
       {
-        speedSetup(max_ 
+        speedSetup(max_vel, max_vel);
       }
-    }
-    print_status();
+      else if(obstacle_distance < 80 and obstacle_distance >= 60)
+      {
+        speedSetup((max_vel / 25) * 17, (max_vel / 25) * 17);
+      }
+      else if(obstacle_distance < 60 and obstacle_distance >= 40)
+      {
+        speedSetup((max_vel / 25) * 13, (max_vel / 25) * 13);
+      }
+      else
+      {
+        speedSetup((max_vel / 25) * 9, (max_vel / 25) * 9);
+        aeb_handler();
+      }
+  }
+  print_status();
 }

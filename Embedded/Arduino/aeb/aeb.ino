@@ -22,11 +22,6 @@ const float ppr = 1800;
 volatile float pulseCountL = 0, pulseCountR = 0;
 volatile int rpmL, rpmR, rpm;
 
-const float Kp = 10.0;
-volatile int error;
-
-volatile double Pcontrol;
-
 void print_status()
 {
     Serial.print("distance : ");
@@ -107,22 +102,6 @@ void speedCalibration()
     rpmR = (int)((pulseCountR / ppr) * (60.0 / 0.5));
     rpm = (rpmL + rpmR) / 2;
     aeb_handler();
-
-//    error = rpmL - rpmR;
-//    Pcontrol = Kp * abs(error);
-//    if(error < 0) vel_L += Pcontrol;
-//    else if(error > 0) vel_R += Pcontrol;
-//    speed_limit();
-//    speedSetup(vel_L, vel_R);
-    
-//    Serial.print("Left rpm: ");
-//    Serial.println(rpmL);
-//    Serial.print("Right rpm: ");
-//    Serial.println(rpmR);
-//    Serial.print("left speed : ");
-//    Serial.println(vel_L);
-//    Serial.print("right speed : ");
-//    Serial.println(vel_R);
     
     pulseCountL = 0;
     pulseCountR = 0;
