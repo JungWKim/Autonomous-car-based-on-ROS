@@ -16,10 +16,8 @@
 //  Assigning pin numbers
 //------------------------------------------------
 
-#define encoderL   18
-//#define encoderL_g 19
-#define encoderR   21
-//#define encoderR_g 20
+#define encoderR   18
+#define encoderL   21
 
 #define EA  6
 #define A1  12
@@ -35,7 +33,7 @@
 //   generate variables
 //------------------------------------------------
 boolean left_steering, right_steering;
-int vel_L = 50, vel_R = 50;
+int vel_L = 70, vel_R = 70;
 
 const int ppr = 1800;
 volatile int pulseCountL = 0, pulseCountR = 0;
@@ -49,17 +47,16 @@ volatile double Pcontrol;
 float reflect_duration, obstacle_distance, velocity, ttc, rpm;
 int target_gap;
 char rxBuffer;
-int pid;
 
 //   interrupt function definitions
 //------------------------------------------------
 void speed_limit()
 {
     if(vel_L > 250) vel_L = 250;
-    else if(vel_L < 50) vel_L = 50;
+    else if(vel_L < 50) vel_L = 70;
         
     if(vel_R > 250) vel_R = 250;
-    else if(vel_R < 50) vel_R = 50;
+    else if(vel_R < 50) vel_R = 70;
 }
 
 float detect_distance()
@@ -113,25 +110,23 @@ void speedCalibration()
 
   if(left_steering)
   {
-//    speed_gap = rpmR - rpmL;
-//    error = speed_gap - target_gap;
-//    Pcontrol = Kp * error;
-//    if(speed_gap > target_gap)      vel_L += Pcontrol;
-//    else if(speed_gap < target_gap) vel_L -= Pcontrol;
-//    speed_limit();
-//    speedSetup(vel_L, vel_R);
-    speedSetup(60, 70);
+    speed_gap = rpmR - rpmL;
+    error = speed_gap - target_gap;
+    Pcontrol = Kp * error;
+    if(speed_gap > target_gap)      vel_L += Pcontrol;
+    else if(speed_gap < target_gap) vel_L -= Pcontrol;
+    speed_limit();
+    speedSetup(vel_L, vel_R);
   }
   else if(right_steering)
   {
-//    speed_gap = rpmL - rpmR;
-//    error = speed_gap - target_gap;
-//    Pcontrol = Kp * error;
-//    if(speed_gap > target_gap)      vel_R += Pcontrol;
-//    else if(speed_gap < target_gap) vel_R -= Pcontrol;
-//    speed_limit();
-//    speedSetup(vel_L, vel_R);
-      speedSetup(70, 60);
+    speed_gap = rpmL - rpmR;
+    error = speed_gap - target_gap;
+    Pcontrol = Kp * error;
+    if(speed_gap > target_gap)      vel_R += Pcontrol;
+    else if(speed_gap < target_gap) vel_R -= Pcontrol;
+    speed_limit();
+    speedSetup(vel_L, vel_R);
   }
   else
   {
@@ -142,7 +137,9 @@ void speedCalibration()
 //      speed_limit();
 //      speedSetup(vel_L, vel_R);
 //    }
-      speedSetup(50, 50);
+    vel_L = 70;
+    vel_R = 70;
+    speedSetup(vel_L, vel_R);
   }
 
   pulseCountL = 0;
@@ -157,12 +154,12 @@ void pulseCounterR() { pulseCountR++; }
 //------------------------------------------------
 void speedSetup(int left, int right)
 {
-  analogWrite(EA, left);
-  analogWrite(EB, right);
+  analogWrite(EA, right);
+  analogWrite(EB, left);
 }
 
 //direction set to move forward
-void moveFront()
+void moveForward()
 {
   digitalWrite(A2, HIGH);
   digitalWrite(A1, LOW);
@@ -189,7 +186,7 @@ void setup()
   pinMode(trig, OUTPUT);
   pinMode(echo, INPUT);
 
-  moveFront();
+  moveForward();
   
   Serial.begin(57600);
 
@@ -199,7 +196,7 @@ void setup()
   MsTimer2::set(200, speedCalibration);
   MsTimer2::start();
 
-  speedSetup(50, 50);//initial speed >> 0
+  speedSetup(vel_L, vel_R);//initial speed >> 0
 }
 
 
@@ -207,33 +204,39 @@ void setup()
 //---------------------------------------------
 void loop()
 {    
-    obstacle_distance = detect_distance();
-    ttc = calculate_ttc();
-    
-    if(Serial.available() > 0)
-    {
-        rxBuffer = Serial.read();
-        pid = (signed int)rxBuffer;
-    }
-    
-    target_gap = pid;
+  obstacle_distance = detect_distance();
+  ttc = calculate_ttc();
+  
+  if(Serial.available() > 0)
+  {
+    rxBuffer = Serial.read();
+    target_gap = (signed int)rxBuffer;
     if(target_gap > 0)
     {
-        left_steering = true;
-        right_steering = false;
+      left_steering = true;
+      right_steering = false;
     }
     else if(target_gap < 0)
     {
-        left_steering = false;
-        right_steering = true;
+      left_steering = false;
+      right_steering = true;
     }
     else
     {
-        left_steering = false;
-        right_steering = false;
-        vel_L = 50;
-        vel_R = 50;
+      left_steering = false;
+      right_steering = false;
+      vel_L = 70;
+      vel_R = 70;
+      speedSetup(vel_L, vel_R);
     }
-
-    print_status();
+  }
+  else
+  {
+    left_steering = false;
+    right_steering = false;
+    vel_L = 70;
+    vel_R = 70;
+    speedSetup(vel_L, vel_R);
+  }
+  print_status();
 }

@@ -1,8 +1,8 @@
 #include <math.h>
 #include <MsTimer2.h>
 
-#define encoderL 18
-#define encoderR 21
+#define encoderR 18
+#define encoderL 21
 
 #define EA 6
 #define A1 12
@@ -16,8 +16,7 @@
 #define echo 33
 
 float reflect_duration, obstacle_distance, velocity, ttc;
-int vel_L = 170, vel_R = 170;
-short aeb_signal = 0;
+const float max_vel = 250;
 const float ppr = 1800;
 volatile float pulseCountL = 0, pulseCountR = 0;
 volatile int rpmL, rpmR, rpm;
@@ -36,10 +35,19 @@ void print_status()
     Serial.println(ttc);
 }
 
+float calculate_ttc()
+{
+  float _ttc;
+  velocity = (rpm * 6.6 * 3.141592) / 60;
+  _ttc = (obstacle_distance / velocity) - 1;
+  if(_ttc < 0) _ttc = 0;
+  return _ttc;
+}
+
 void speedSetup(int left, int right)
 {
-    analogWrite(EA, left);
-    analogWrite(EB, right);
+    analogWrite(EA, right);
+    analogWrite(EB, left);
 }
 
 float detect_distance()
@@ -57,43 +65,22 @@ float detect_distance()
 
 void aeb_handler()
 {
-    obstacle_distance = detect_distance();
-    if(obstacle_distance <= 40)
+    if(obstacle_distance <= 30)
     {
-      aeb_signal = 1;
-      velocity = (rpm * 6.6 * 3.141592) / 60;
-      ttc = (obstacle_distance / velocity) - 1;
-      if(ttc < 0) ttc = 0;
-      if(ttc <= 3)
+      ttc = calculate_ttc();
+      if(ttc <= 2)
       {
-          vel_L = 0;
-          vel_R = 0;
-          speedSetup(vel_L, vel_R);
+          speedSetup(0, 0);
           while(1)
           {
             obstacle_distance = detect_distance();
-            print_status();
-            if(obstacle_distance > 40) break;
+            if(obstacle_distance > 40) 
+            {
+              break;
+            }
           }
       }
-      else if(ttc <= 4)
-      {
-          vel_L = 50;
-          vel_R = 50;
-          speedSetup(vel_L, vel_R);
-      }
-      else if(ttc <= 5)
-      {
-          vel_L = 80;
-          vel_R = 80;
-          speedSetup(vel_L, vel_R);
-      }
     }
-    else
-    {
-      aeb_signal = 0;
-    }
-    print_status();
 }
 
 void speedCalibration()
@@ -101,7 +88,6 @@ void speedCalibration()
     rpmL = (int)((pulseCountL / ppr) * (60.0 / 0.5));
     rpmR = (int)((pulseCountR / ppr) * (60.0 / 0.5));
     rpm = (rpmL + rpmR) / 2;
-    aeb_handler();
     
     pulseCountL = 0;
     pulseCountR = 0;
@@ -112,12 +98,12 @@ void pulseCounterR() { pulseCountR++; }
 
 void setup()
 {
-    pinMode(encoderL, INPUT);
+    pinMode(encoderR, INPUT);
     pinMode(EA, OUTPUT);
     pinMode(A2, OUTPUT);
     pinMode(A1, OUTPUT);
                
-    pinMode(encoderR, INPUT);
+    pinMode(encoderL, INPUT);
     pinMode(EB, OUTPUT);
     pinMode(B3, OUTPUT);
     pinMode(B4, OUTPUT);
@@ -130,7 +116,6 @@ void setup()
            
     MsTimer2::set(500, speedCalibration);
     MsTimer2::start();
-    speedSetup(170, 170);//initial speed
 
     digitalWrite(A2, HIGH);
     digitalWrite(A1, LOW);
@@ -142,9 +127,24 @@ void setup()
 
 void loop()
 {
-    if(!aeb_signal)
-    {
-      speedSetup(170, 170);
-      print_status();
-    }
+  obstacle_distance = detect_distance();
+  if(obstacle_distance > 100)
+  {
+    speedSetup(max_vel, max_vel);
+  }
+  else if(obstacle_distance < 80 and obstacle_distance >= 60)
+  {
+    speedSetup((max_vel / 25) * 17, (max_vel / 25) * 17);
+  }
+  else if(obstacle_distance < 60 and obstacle_distance >= 40)
+  {
+    speedSetup((max_vel / 25) * 13, (max_vel / 25) * 13);
+  }
+  else
+  {
+    speedSetup((max_vel / 25) * 9, (max_vel / 25) * 9);
+    aeb_handler();
+  }
+  
+  print_status();
 }
