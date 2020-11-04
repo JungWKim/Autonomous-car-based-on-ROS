@@ -28,6 +28,6 @@ using namespace std;
 struct message
 {
     long msg_type;
-    int control;
+    float control;
 };
 

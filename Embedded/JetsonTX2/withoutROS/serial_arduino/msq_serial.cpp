@@ -3,7 +3,7 @@
 
 int fd, rdcnt;
 int msqid;
-int buffer;
+float buffer;
 
 key_t key = 54321;
 struct message recv_msg;
