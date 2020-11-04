@@ -34,6 +34,7 @@
 //------------------------------------------------
 boolean left_steering, right_steering;
 int vel_L = 70, vel_R = 70;
+float system_delay = 0.5;
 
 const int ppr = 1800;
 volatile int pulseCountL = 0, pulseCountR = 0;
@@ -81,6 +82,26 @@ float calculate_ttc()
   _ttc = (obstacle_distance / velocity) - 1.0;// 1 is system delay
   if(_ttc < 0) _ttc = 0;
   return _ttc;
+}
+
+void aeb_handler()
+{
+    if(obstacle_distance <= 30)
+    {
+      ttc = calculate_ttc();
+      if(ttc <= (1.5 + system_delay))
+      {
+          speedSetup(0, 0);
+          while(1)
+          {
+            obstacle_distance = detect_distance();
+            if(obstacle_distance > 40) 
+            {
+              break;
+            }
+          }
+      }
+    }
 }
 
 void print_status()
@@ -191,7 +212,6 @@ void setup()
 void loop()
 {    
   obstacle_distance = detect_distance();
-  ttc = calculate_ttc();
   if(Serial.available() > 0)
   {
     rxBuffer = Serial.read();
