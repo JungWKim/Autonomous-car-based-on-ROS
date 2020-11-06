@@ -1,6 +1,5 @@
 #include <math.h>
 #include <MsTimer2.h>
-#include <SPI.h>
 #include <CAN.h>
 
 /*----------------
@@ -16,8 +15,8 @@
 //  Assigning pin numbers
 //------------------------------------------------
 
-#define encoderR   18
-#define encoderL   21
+#define encoderL   18
+#define encoderR   21
 
 #define EA  6
 #define A1  12
@@ -27,8 +26,8 @@
 #define B4   9
 #define EB   8
 
-#define trig 37
-#define echo 33
+#define trig 41
+#define echo 45
 
 //   generate variables
 //------------------------------------------------
@@ -36,9 +35,9 @@ boolean left_steering, right_steering;
 boolean steering_lock = false;
 int vel_L = 70, vel_R = 70;
 
-const int ppr = 1800;
 const float system_delay = 0.5;
-volatile int pulseCountL = 0, pulseCountR = 0;
+volatile const float ppr = 1800;
+volatile float pulseCountL = 0, pulseCountR = 0;
 volatile int rpmL, rpmR;
 volatile int speed_adjust = 0;
 
@@ -95,7 +94,7 @@ void aeb_handler()
     while(1)
     {
       obstacle_distance = detect_distance();
-      if(obstacle_distance > 40) 
+      if(obstacle_distance > 40)
       {
         break;
       }
@@ -110,29 +109,29 @@ void print_status()
 //  Serial.println(pulseCountL);
 //  Serial.print("pulseCounterR : ");
 //  Serial.println(pulseCountR);
-  Serial.print("rpmL : ");
-  Serial.println(rpmL);
-  Serial.print("rpmR : ");
-  Serial.println(rpmR);
+//  Serial.print("rpmL : ");
+//  Serial.println(rpmL);
+//  Serial.print("rpmR : ");
+//  Serial.println(rpmR);
 //  Serial.print("distance : ");
 //  Serial.println(obstacle_distance);
 //  Serial.print("velocity : ");
 //  Serial.println(velocity);
-//  Serial.print("left speed : ");
-//  Serial.println(vel_L);
-//  Serial.print("right speed : ");
-//  Serial.println(vel_R);
+  Serial.print("left speed : ");
+  Serial.println(vel_L);
+  Serial.print("right speed : ");
+  Serial.println(vel_R);
 //  Serial.print("ttc : ");
 //  Serial.println(ttc);
-  Serial.print("received angle : ");
-  Serial.println(steering_angle);
+//  Serial.print("received angle : ");
+//  Serial.println(steering_angle);
 }
 
 void speedCalibration()
 {
   rpmL = (int)((pulseCountL / ppr) * (60.0 / 0.4));
   rpmR = (int)((pulseCountR / ppr) * (60.0 / 0.4));
-  rpm = (rpmL + rpmR) / 2;
+  rpm  = (rpmL + rpmR) / 2;
 
   if(!steering_lock)
   {
@@ -155,7 +154,6 @@ void speedCalibration()
       speedSetup(vel_L, vel_R);
     }
   }
-
   pulseCountL = 0;
   pulseCountR = 0;
 }
@@ -168,17 +166,17 @@ void pulseCounterR() { pulseCountR++; }
 //------------------------------------------------
 void speedSetup(int left, int right)
 {
-  analogWrite(EA, right);
-  analogWrite(EB, left);
+  analogWrite(EA, left);
+  analogWrite(EB, right);
 }
 
 //direction set to move forward
 void moveForward()
 {
-  digitalWrite(A2, HIGH);
-  digitalWrite(A1, LOW);
-  digitalWrite(B4, HIGH);
-  digitalWrite(B3, LOW);
+  digitalWrite(A2, LOW);
+  digitalWrite(A1, HIGH);
+  digitalWrite(B4, LOW);
+  digitalWrite(B3, HIGH);
 }
 
 
@@ -201,14 +199,13 @@ void setup()
   pinMode(echo, INPUT);
 
   moveForward();
-  
-  Serial.begin(57600);
 
   attachInterrupt(digitalPinToInterrupt(encoderL), pulseCounterL, RISING);
   attachInterrupt(digitalPinToInterrupt(encoderR), pulseCounterR, RISING);
    
   MsTimer2::set(400, speedCalibration);
   MsTimer2::start();
+  Serial.begin(57600);
 
   speedSetup(vel_L, vel_R);//initial speed >> 0
 }
@@ -223,6 +220,7 @@ void loop()
   {
     aeb_handler();
   }
+  
   if(Serial.available() > 0)
   {
     rxBuffer = Serial.read();
