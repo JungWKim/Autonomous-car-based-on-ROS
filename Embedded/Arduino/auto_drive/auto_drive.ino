@@ -33,9 +33,11 @@
 //   generate variables
 //------------------------------------------------
 boolean left_steering, right_steering;
+boolean steering_lock = false;
 int vel_L = 70, vel_R = 70;
 
 const int ppr = 1800;
+const float system_delay = 0.5;
 volatile int pulseCountL = 0, pulseCountR = 0;
 volatile int rpmL, rpmR;
 volatile int speed_adjust = 0;
@@ -83,12 +85,35 @@ float calculate_ttc()
   return _ttc;
 }
 
+void aeb_handler()
+{
+  ttc = calculate_ttc();
+  if(ttc <= (1.5 + system_delay))
+  {
+    steering_lock = true;
+    speedSetup(0, 0);
+    while(1)
+    {
+      obstacle_distance = detect_distance();
+      if(obstacle_distance > 40) 
+      {
+        break;
+      }
+    }
+    steering_lock = false;
+  }
+}
+
 void print_status()
 {
-//  Serial.print("rpmL : ");
-//  Serial.println(rpmL);
-//  Serial.print("rpmR : ");
-//  Serial.println(rpmR);
+//  Serial.print("pulseCounterL : ");
+//  Serial.println(pulseCountL);
+//  Serial.print("pulseCounterR : ");
+//  Serial.println(pulseCountR);
+  Serial.print("rpmL : ");
+  Serial.println(rpmL);
+  Serial.print("rpmR : ");
+  Serial.println(rpmR);
 //  Serial.print("distance : ");
 //  Serial.println(obstacle_distance);
 //  Serial.print("velocity : ");
@@ -99,33 +124,36 @@ void print_status()
 //  Serial.println(vel_R);
 //  Serial.print("ttc : ");
 //  Serial.println(ttc);
-    Serial.print("received angle : ");
-    Serial.println(steering_angle);
+  Serial.print("received angle : ");
+  Serial.println(steering_angle);
 }
 
 void speedCalibration()
 {
-  rpmL = (int)((pulseCountL / ppr) * (60.0 / 0.5));
-  rpmR = (int)((pulseCountR / ppr) * (60.0 / 0.5));
+  rpmL = (int)((pulseCountL / ppr) * (60.0 / 0.4));
+  rpmR = (int)((pulseCountR / ppr) * (60.0 / 0.4));
   rpm = (rpmL + rpmR) / 2;
 
-  if(left_steering)
+  if(!steering_lock)
   {
-    rpm_gap = rpmR - rpmL;
-    if(rpm_gap > target_rpm_gap) speed_adjust -= 10;
-    else if(rpm_gap < target_rpm_gap) speed_adjust += 10;
-    speedSetup(vel_L, vel_R + speed_adjust);
-  }
-  else if(right_steering)
-  {
-    rpm_gap = rpmL - rpmR;
-    if(target_rpm_gap > rpm_gap) speed_adjust += 10;
-    else if(target_rpm_gap < rpm_gap) speed_adjust -= 10;
-    speedSetup(vel_L + speed_adjust, vel_R);
-  }
-  else
-  {
-    speedSetup(vel_L, vel_R);
+    if(left_steering)
+    {
+      rpm_gap = rpmR - rpmL;
+      if(rpm_gap > target_rpm_gap) speed_adjust -= 10;
+      else if(rpm_gap < target_rpm_gap) speed_adjust += 10;
+      speedSetup(vel_L, vel_R + speed_adjust);
+    }
+    else if(right_steering)
+    {
+      rpm_gap = rpmL - rpmR;
+      if(target_rpm_gap > rpm_gap) speed_adjust += 10;
+      else if(target_rpm_gap < rpm_gap) speed_adjust -= 10;
+      speedSetup(vel_L + speed_adjust, vel_R);
+    }
+    else
+    {
+      speedSetup(vel_L, vel_R);
+    }
   }
 
   pulseCountL = 0;
@@ -179,7 +207,7 @@ void setup()
   attachInterrupt(digitalPinToInterrupt(encoderL), pulseCounterL, RISING);
   attachInterrupt(digitalPinToInterrupt(encoderR), pulseCounterR, RISING);
    
-  MsTimer2::set(200, speedCalibration);
+  MsTimer2::set(400, speedCalibration);
   MsTimer2::start();
 
   speedSetup(vel_L, vel_R);//initial speed >> 0
@@ -191,11 +219,17 @@ void setup()
 void loop()
 {    
   obstacle_distance = detect_distance();
-  ttc = calculate_ttc();
+  if(obstacle_distance <= 40)
+  {
+    aeb_handler();
+  }
   if(Serial.available() > 0)
   {
     rxBuffer = Serial.read();
     steering_angle = (float)rxBuffer;
+    // -6 ~ 6 is defined as natural bias
+    // over 30 is considered that lane detection is failed
+    if(steering_angle > -6 and steering_angle < 6) steering_angle = 0;
     target_rpm_gap = (int)(steering_angle * Kp);
     if(target_rpm_gap > 0)
     {

@@ -66,22 +66,19 @@ float detect_distance()
 
 void aeb_handler()
 {
-    if(obstacle_distance <= 30)
-    {
-      ttc = calculate_ttc();
-      if(ttc <= (1.5 + system_delay))
+  ttc = calculate_ttc();
+  if(ttc <= (1.5 + system_delay))
+  {
+      speedSetup(0, 0);
+      while(1)
       {
-          speedSetup(0, 0);
-          while(1)
-          {
-            obstacle_distance = detect_distance();
-            if(obstacle_distance > 40) 
-            {
-              break;
-            }
-          }
+        obstacle_distance = detect_distance();
+        if(obstacle_distance > 40) 
+        {
+          break;
+        }
       }
-    }
+  }
 }
 
 void speedCalibration()
