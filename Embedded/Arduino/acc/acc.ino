@@ -1,8 +1,8 @@
 #include <math.h>
 #include <MsTimer2.h>
 
-#define encoderR 18
-#define encoderL 21
+#define encoderL 18
+#define encoderR 21
 
 #define EA 6
 #define A1 12
@@ -12,17 +12,18 @@
 #define B4 9
 #define EB 8
 
-#define front_echo 33
-#define front_trig 37
+#define front_echo 41
+#define front_trig 45
 
-float reflect_duration, front_obstacle_distance, target_distance;
+float reflect_duration, front_obstacle_distance;
 float error;
 int Pcontrol;
 float velocity, ttc;
 float system_delay = 0.5;
+const float target_distance = 40;
 const float max_vel = 250;
 const float ppr = 1800;
-const float Kp = 1.0;
+const float Kp = 8.0;
 volatile float pulseCountL = 0, pulseCountR = 0;
 volatile int rpmL, rpmR, rpm;
 
@@ -30,26 +31,28 @@ void print_status()
 {
 //    Serial.print("distance : ");
 //    Serial.println(front_obstacle_distance);
-    Serial.print("rpmL : ");
-    Serial.println(rpmL);
-    Serial.print("rpmR : ");
-    Serial.println(rpmR);
-    Serial.print("velocity : ");
-    Serial.println(velocity);
+//    Serial.print("rpmL : ");
+//    Serial.println(rpmL);
+//    Serial.print("rpmR : ");
+//    Serial.println(rpmR);
+//    Serial.print("velocity : ");
+//    Serial.println(velocity);
 //    Serial.print("ttc : ");
 //    Serial.println(ttc);
+    Serial.print("speed : ");
+    Serial.println(150 + Pcontrol);
 }
 
-void speedLimit(int calibration_speed)
+void speedLimit()
 {
-  if(calibration_speed > 100) calibration_speed = 100;
-  if(calibration_speed < -150) calibration_speed = -150;
+  if(Pcontrol > 100) Pcontrol = 100;
+  if(Pcontrol < -150) Pcontrol = -150;
 }
 
 float calculate_ttc()
 {
   float _ttc;
-  velocity = (rpm * 6.6 * 3.141592) / 60;
+
   _ttc = (front_obstacle_distance / velocity) - 1;
   if(_ttc < 0) _ttc = 0;
   return _ttc;
@@ -94,6 +97,7 @@ void speedCalibration()
     rpmL = (int)((pulseCountL / ppr) * (60.0 / 0.5));
     rpmR = (int)((pulseCountR / ppr) * (60.0 / 0.5));
     rpm = (rpmL + rpmR) / 2;
+    velocity = (rpm * 6.6 * 3.141592) / 60.0;
     
     pulseCountL = 0;
     pulseCountR = 0;
@@ -138,7 +142,7 @@ void loop()
   detect_distance();
   error = front_obstacle_distance - target_distance;
   Pcontrol = (int)(Kp * error);
-  speedLimit(Pcontrol);
+  speedLimit();
   speedSetup(150 + Pcontrol, 150 + Pcontrol);
   if(front_obstacle_distance <= 15)
   {

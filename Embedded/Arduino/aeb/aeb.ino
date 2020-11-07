@@ -12,11 +12,11 @@
 #define B4 9
 #define EB 8
 
-#define front_echo 33
-#define front_trig 37
+#define front_echo 41
+#define front_trig 45
 
-#define back_echo 41
-#define back_trig 45
+#define back_echo 33
+#define back_trig 37
 
 float reflect_duration, front_obstacle_distance, back_obstacle_distance;
 float velocity, ttc;
@@ -43,8 +43,8 @@ void print_status()
 float calculate_ttc()
 {
   float _ttc;
-  velocity = (rpm * 6.6 * 3.141592) / 60;
-  _ttc = (back_obstacle_distance / velocity) - 1;
+  velocity = ((float)rpm * 6.6 * 3.141592) / 60.0;
+  _ttc = (front_obstacle_distance / velocity) - 1;
   if(_ttc < 0) _ttc = 0;
   return _ttc;
 }
@@ -58,37 +58,29 @@ void speedSetup(int left, int right)
 void detect_distance()
 {
     digitalWrite(front_trig, LOW);
-    digitalWrite(back_trig, LOW);
     delayMicroseconds(2);
     digitalWrite(front_trig, HIGH);
-    digitalWrite(back_trig, HIGH);
     delayMicroseconds(10);
     digitalWrite(front_trig, LOW);
-    digitalWrite(back_trig, LOW);
     reflect_duration = pulseIn(front_echo, HIGH);
     front_obstacle_distance = ((float)(340 * reflect_duration) / 10000) / 2;
-    reflect_duration = pulseIn(back_echo, HIGH);
-    back_obstacle_distance = ((float)(340 * reflect_duration) / 10000) / 2;
 }
 
 void aeb_handler()
 {
-    if(back_obstacle_distance <= 40)
+  ttc = calculate_ttc();
+  if(ttc <= (1.5 + system_delay))
+  {
+    speedSetup(0, 0);
+    while(1)
     {
-      ttc = calculate_ttc();
-      if(ttc <= (1.5 + system_delay))
+      detect_distance();
+      if(front_obstacle_distance > 40) 
       {
-        speedSetup(0, 0);
-        while(1)
-        {
-          detect_distance();
-          if(back_obstacle_distance > 40) 
-          {
-            break;
-          }
-        }
+        break;
       }
     }
+  }
 }
 
 void speedCalibration()
@@ -127,10 +119,10 @@ void setup()
     MsTimer2::set(500, speedCalibration);
     MsTimer2::start();
 
-    digitalWrite(A2, HIGH);
-    digitalWrite(A1, LOW);
-    digitalWrite(B4, HIGH);
-    digitalWrite(B3, LOW);
+    digitalWrite(A2, LOW);
+    digitalWrite(A1, HIGH);
+    digitalWrite(B4, LOW);
+    digitalWrite(B3, HIGH);
 
     Serial.begin(57600);
 }
@@ -138,15 +130,15 @@ void setup()
 void loop()
 {
   detect_distance();
-  if(back_obstacle_distance >= 80)
+  if(front_obstacle_distance >= 80)
   {
     speedSetup(max_vel, max_vel);
   }
-  else if(back_obstacle_distance < 80 and back_obstacle_distance >= 60)
+  else if(front_obstacle_distance < 80 and front_obstacle_distance >= 60)
   {
     speedSetup((max_vel / 25) * 17, (max_vel / 25) * 17);
   }
-  else if(back_obstacle_distance < 60 and back_obstacle_distance >= 40)
+  else if(front_obstacle_distance < 60 and front_obstacle_distance >= 40)
   {
     speedSetup((max_vel / 25) * 13, (max_vel / 25) * 13);
   }

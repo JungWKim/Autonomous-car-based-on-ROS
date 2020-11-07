@@ -39,8 +39,8 @@ void print_status()
 float calculate_ttc()
 {
   float _ttc;
-  velocity = (rpm * 6.6 * 3.141592) / 60;
-  _ttc = (obstacle_distance / velocity) - 1;
+  velocity = ((float)rpm * 6.6 * 3.141592) / 60.0;
+  _ttc = (obstacle_distance / velocity);
   if(_ttc < 0) _ttc = 0;
   return _ttc;
 }
@@ -115,10 +115,10 @@ void setup()
     MsTimer2::set(500, speedCalibration);
     MsTimer2::start();
 
-    digitalWrite(A2, LOW);
-    digitalWrite(A1, HIGH);
-    digitalWrite(B4, LOW);
-    digitalWrite(B3, HIGH);
+    digitalWrite(A2, HIGH);
+    digitalWrite(A1, LOW);
+    digitalWrite(B4, HIGH);
+    digitalWrite(B3, LOW);
 
     Serial.begin(57600);
 }
