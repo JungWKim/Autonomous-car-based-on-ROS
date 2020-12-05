@@ -243,7 +243,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="10dp"
                 android:layout_marginRight="10dp"
-                android:text="170"
+                android:text="100"
                 android:background="@drawable/border"
                 android:textSize="30dp" />
 
@@ -301,7 +301,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginLeft="10dp"
                         android:layout_marginRight="10dp"
-                        android:text="170"
+                        android:text="100"
                         android:visibility="gone"
                         android:textSize="30dp" />
 
@@ -333,7 +333,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="10dp"
                 android:layout_marginRight="10dp"
-                android:text="170"
+                android:text="100"
                 android:background="@drawable/border"
                 android:textSize="30dp" />
         </LinearLayout>
